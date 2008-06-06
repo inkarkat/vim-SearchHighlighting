@@ -89,6 +89,25 @@ vmap <silent> * :<C-U>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,
 
 
 
+function! s:AutoSearch()
+    if stridx('sSvV', mode()) != -1
+	let l:save_unnamedregister = @@
+
+	let l:captureTextCommands = 'ygv'
+	if stridx('sS', mode()) != -1
+	    " To be able to yank in select mode, we need to temporarily switch
+	    " to visual mode, then back to select mode. 
+	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
+	endif
+	execute 'normal! ' . l:captureTextCommands
+	let @/ = <SID>GetSearchPattern(@@, 0)
+
+	let @@ = l:save_unnamedregister
+    else
+	let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+    endif
+endfunction
+
 function! s:ToggleAutoSearch()
     if exists('#ingosearchAutoSearch#CursorMoved#*')
 	augroup ingosearchAutoSearch
@@ -99,7 +118,7 @@ function! s:ToggleAutoSearch()
     else
 	augroup ingosearchAutoSearch
 	    autocmd!
-	    autocmd CursorMoved  * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+	    autocmd CursorMoved  * call <SID>AutoSearch()
 	    autocmd CursorMovedI * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
 	augroup END
 	echomsg "Enabled auto-search highlighting."
@@ -107,6 +126,9 @@ function! s:ToggleAutoSearch()
     endif
 endfunction
 
-nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+nnoremap <script> <Plug>ingosearchAutoSearch :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+if ! hasmapto('<Plug>ingosearchAutoSearch', 'n')
+    nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
