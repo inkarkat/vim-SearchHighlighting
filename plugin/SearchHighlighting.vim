@@ -9,6 +9,12 @@
 " With the disabling of the jump to the next match, there is no difference
 " between * and # any more, so the # key can now be used for some other mapping. 
 "
+" The auto-search functionality instantly highlights the word under the cursor
+" when typing or moving around. This can be helpful while browsing source code;
+" whenever you position the cursor on an identifier, all other occurrences are
+" instantly highlighted. This functionality is toggled on/off via <Leader>*. You
+" can also :nohlsearch to temporarily disable the highlighting. 
+"
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
@@ -88,14 +94,15 @@ function! s:ToggleAutoSearch()
 	augroup ingosearchAutoSearch
 	    autocmd!
 	augroup END
-	echomsg "Disabled auto search."
+	echomsg "Disabled auto-search."
 	return 0
     else
 	augroup ingosearchAutoSearch
 	    autocmd!
-	    autocmd CursorMoved * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+	    autocmd CursorMoved  * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+	    autocmd CursorMovedI * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
 	augroup END
-	echomsg "Enabled auto search."
+	echomsg "Enabled auto-search."
 	return 1
     endif
 endfunction
