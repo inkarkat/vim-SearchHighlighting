@@ -30,6 +30,10 @@ let g:loaded_ingosearch = 1
 " invoke the mapping a second time to get the desired result. 
 let s:isSearchOn = 0
 
+function! s:GetSearchPattern( text, isWholeWordSearch )
+    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+endfunction
+
 function! s:Search( text, isWholeWordSearch )
     " Atom \V sets following pattern to "very nomagic", i.e. only the backslash
     " has special meaning.
@@ -37,7 +41,7 @@ function! s:Search( text, isWholeWordSearch )
     " a search via '/' or '*', too. This works well even with <Tab> (no need to
     " change ^I into \t), but not with a line break, which must be changed from
     " ^M to \n. This is done with the substitute() function.
-    let l:searchPattern = '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+    let l:searchPattern = s:GetSearchPattern( a:text, a:isWholeWordSearch )
 
     if @/ == l:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
@@ -76,5 +80,26 @@ nmap <silent> g* :if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set h
 " next match. 
 " gV avoids automatic re-selection of the Visual area in select mode. 
 vmap <silent> * :<C-U>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+
+
+
+function! s:ToggleAutoSearch()
+    if exists('#ingosearchAutoSearch#CursorMoved#*')
+	augroup ingosearchAutoSearch
+	    autocmd!
+	augroup END
+	echomsg "Disabled auto search."
+	return 0
+    else
+	augroup ingosearchAutoSearch
+	    autocmd!
+	    autocmd CursorMoved * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+	augroup END
+	echomsg "Enabled auto search."
+	return 1
+    endif
+endfunction
+
+nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
