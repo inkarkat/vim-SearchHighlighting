@@ -19,6 +19,7 @@
 "
 " REVISION	DATE		REMARKS 
 "	002	07-Jun-2008	Implemented toggling of search highlighting. 
+"				Implemented auto-search highlighting. 
 "	001	06-Jun-2008	file creation
 
 " Avoid installing twice or when in unsupported VIM version. 
@@ -79,13 +80,13 @@ endfunction
 " Highlight current word as search pattern, but do not jump to next match. 
 "
 " <cword> selects the (key)word under or after the cursor, just like the '*' command. 
-nmap <silent> * :if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
-nmap <silent> g* :if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+nmap <silent>  * :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+nmap <silent> g* :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
 
 " Highlight selected text in visual mode as search pattern, but do not jump to
 " next match. 
 " gV avoids automatic re-selection of the Visual area in select mode. 
-vmap <silent> * :<C-U>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+vmap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
 
 
 
@@ -108,20 +109,38 @@ function! s:AutoSearch()
     endif
 endfunction
 
+function! s:AutoSearchOn()
+    augroup ingosearchAutoSearch
+	autocmd!
+	autocmd CursorMoved  * call <SID>AutoSearch()
+	autocmd CursorMovedI * call <SID>AutoSearch()
+    augroup END
+    doautocmd ingosearchAutoSearch CursorMoved
+    echomsg "Enabled auto-search highlighting."
+endfunction
+
+function! s:AutoSearchOff()
+    if ! exists('#ingosearchAutoSearch#CursorMoved#*')
+	" Short-circuit optimization. 
+	return
+    endif
+    augroup ingosearchAutoSearch
+	autocmd!
+    augroup END
+    echomsg "Disabled auto-search highlighting."
+
+    " If auto-search was turned off by the star command, inform the star command
+    " that it must have turned the highlighting on, not off. (This improves the
+    " accuracy of the s:isSearchOn workaround.)
+    let s:isSearchOn = 0
+endfunction
+
 function! s:ToggleAutoSearch()
     if exists('#ingosearchAutoSearch#CursorMoved#*')
-	augroup ingosearchAutoSearch
-	    autocmd!
-	augroup END
-	echomsg "Disabled auto-search highlighting."
+	call s:AutoSearchOff()
 	return 0
     else
-	augroup ingosearchAutoSearch
-	    autocmd!
-	    autocmd CursorMoved  * call <SID>AutoSearch()
-	    autocmd CursorMovedI * call <SID>AutoSearch()
-	augroup END
-	echomsg "Enabled auto-search highlighting."
+	call s:AutoSearchOn()
 	return 1
     endif
 endfunction
