@@ -94,7 +94,7 @@ function! s:ToggleAutoSearch()
 	augroup ingosearchAutoSearch
 	    autocmd!
 	augroup END
-	echomsg "Disabled auto-search."
+	echomsg "Disabled auto-search highlighting."
 	return 0
     else
 	augroup ingosearchAutoSearch
@@ -102,7 +102,7 @@ function! s:ToggleAutoSearch()
 	    autocmd CursorMoved  * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
 	    autocmd CursorMovedI * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
 	augroup END
-	echomsg "Enabled auto-search."
+	echomsg "Enabled auto-search highlighting."
 	return 1
     endif
 endfunction
