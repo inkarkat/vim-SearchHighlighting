@@ -90,11 +90,11 @@ vmap <silent> * :<C-U>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,
 
 
 function! s:AutoSearch()
-    if stridx('sSvV', mode()) != -1
+    if stridx('sSvV', mode()) != -1
 	let l:save_unnamedregister = @@
 
 	let l:captureTextCommands = 'ygv'
-	if stridx('sS', mode()) != -1
+	if stridx('sS', mode()) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
 	    " to visual mode, then back to select mode. 
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
@@ -119,7 +119,7 @@ function! s:ToggleAutoSearch()
 	augroup ingosearchAutoSearch
 	    autocmd!
 	    autocmd CursorMoved  * call <SID>AutoSearch()
-	    autocmd CursorMovedI * let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
+	    autocmd CursorMovedI * call <SID>AutoSearch()
 	augroup END
 	echomsg "Enabled auto-search highlighting."
 	return 1
