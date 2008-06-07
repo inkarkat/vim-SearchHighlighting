@@ -1,4 +1,4 @@
-" ingosearch.vim: Define custom search commands used by ingo. 
+" SearchHighlighting.vim: Highlighting of searches via star, auto-search. 
 "
 " Changes the "star" command '*', so that it doesn't jump to the next match. 
 " If you issue a star command on the same text as before, the search
@@ -23,10 +23,10 @@
 "	001	06-Jun-2008	file creation
 
 " Avoid installing twice or when in unsupported VIM version. 
-if exists('g:loaded_ingosearch')
+if exists('g:loaded_SearchHighlighting')
     finish
 endif
-let g:loaded_ingosearch = 1
+let g:loaded_SearchHighlighting = 1
 
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from VIM. (No this is not &hlsearch, we want to know whether
@@ -38,16 +38,16 @@ let g:loaded_ingosearch = 1
 let s:isSearchOn = 0
 
 function! s:GetSearchPattern( text, isWholeWordSearch )
-    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
-endfunction
-
-function! s:Search( text, isWholeWordSearch )
     " Atom \V sets following pattern to "very nomagic", i.e. only the backslash
     " has special meaning.
     " For \V, \ still must be escaped. We also escape /, because that's done in
     " a search via '/' or '*', too. This works well even with <Tab> (no need to
     " change ^I into \t), but not with a line break, which must be changed from
     " ^M to \n. This is done with the substitute() function.
+    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+endfunction
+
+function! s:Search( text, isWholeWordSearch )
     let l:searchPattern = s:GetSearchPattern( a:text, a:isWholeWordSearch )
 
     if @/ == l:searchPattern && s:isSearchOn
@@ -110,21 +110,21 @@ function! s:AutoSearch()
 endfunction
 
 function! s:AutoSearchOn()
-    augroup ingosearchAutoSearch
+    augroup SearchHighlightingAutoSearch
 	autocmd!
 	autocmd CursorMoved  * call <SID>AutoSearch()
 	autocmd CursorMovedI * call <SID>AutoSearch()
     augroup END
-    doautocmd ingosearchAutoSearch CursorMoved
+    doautocmd SearchHighlightingAutoSearch CursorMoved
     echomsg "Enabled auto-search highlighting."
 endfunction
 
 function! s:AutoSearchOff()
-    if ! exists('#ingosearchAutoSearch#CursorMoved#*')
+    if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	" Short-circuit optimization. 
 	return
     endif
-    augroup ingosearchAutoSearch
+    augroup SearchHighlightingAutoSearch
 	autocmd!
     augroup END
     echomsg "Disabled auto-search highlighting."
@@ -136,7 +136,7 @@ function! s:AutoSearchOff()
 endfunction
 
 function! s:ToggleAutoSearch()
-    if exists('#ingosearchAutoSearch#CursorMoved#*')
+    if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call s:AutoSearchOff()
 	return 0
     else
@@ -145,8 +145,8 @@ function! s:ToggleAutoSearch()
     endif
 endfunction
 
-nnoremap <script> <Plug>ingosearchAutoSearch :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
-if ! hasmapto('<Plug>ingosearchAutoSearch', 'n')
+nnoremap <script> <Plug>SearchHighlightingAutoSearch :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
     nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
 endif
 
