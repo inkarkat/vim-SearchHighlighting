@@ -1,5 +1,6 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-search. 
 "
+" DESCRIPTION:
 " Changes the "star" command '*', so that it doesn't jump to the next match. 
 " If you issue a star command on the same text as before, the search
 " highlighting is turned off (via :nohlsearch); the search pattern remains set,
@@ -15,9 +16,34 @@
 " instantly highlighted. This functionality is toggled on/off via <Leader>*. You
 " can also :nohlsearch to temporarily disable the highlighting. 
 "
+" USAGE:
+"   *		Toggle search highlighting for the current whole \<word\> on/off. 
+"   g*	    	Toggle search highlighting for the current word on/off. 
+"   *	    	In visual mode, toggle search highlighting for the selection on/off. 
+"   <Leader>*   Toggle auto-search highlighting. 
+"
+" INSTALLATION:
+" DEPENDENCIES:
+" CONFIGURATION:
+"   To restore the original '*' behavior, i.e. jumping to the next match, use:
+"	let g:SearchHighlighting_NoJump = 0
+"   Then, the star commands will behave as usual; they only also turn off
+"   auto-search. 
+"
+" LIMITATIONS:
+" ASSUMPTIONS:
+" KNOWN PROBLEMS:
+" TODO:
+"
+" Copyright: (C) 2008 by Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	08-Jun-2008	Added original star command behavior. 
+"				Made jump behavior configurable. 
+"				New star command now also echoes search pattern. 
 "	002	07-Jun-2008	Implemented toggling of search highlighting. 
 "				Implemented auto-search highlighting. 
 "	001	06-Jun-2008	file creation
@@ -27,6 +53,10 @@ if exists('g:loaded_SearchHighlighting')
     finish
 endif
 let g:loaded_SearchHighlighting = 1
+
+if ! exists('g:SearchHighlighting_NoJump')
+    let g:SearchHighlighting_NoJump = 1
+endif
 
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from VIM. (No this is not &hlsearch, we want to know whether
@@ -45,6 +75,9 @@ function! s:GetSearchPattern( text, isWholeWordSearch )
     " change ^I into \t), but not with a line break, which must be changed from
     " ^M to \n. This is done with the substitute() function.
     return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+endfunction
+function! s:GetBackwardsSearchPattern( text, isWholeWordSearch )
+    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '?\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
 endfunction
 
 function! s:Search( text, isWholeWordSearch )
@@ -77,16 +110,33 @@ function! s:Search( text, isWholeWordSearch )
     return 1
 endfunction
 
-" Highlight current word as search pattern, but do not jump to next match. 
-"
-" <cword> selects the (key)word under or after the cursor, just like the '*' command. 
-nmap <silent>  * :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
-nmap <silent> g* :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+if g:SearchHighlighting_NoJump
+    " Highlight current word as search pattern, but do not jump to next match. 
+    "
+    " <cword> selects the (key)word under or after the cursor, just like the star command. 
+    " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
+    nnoremap <silent>  * :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <silent> g* :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
-" Highlight selected text in visual mode as search pattern, but do not jump to
-" next match. 
-" gV avoids automatic re-selection of the Visual area in select mode. 
-vmap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+    " Highlight selected text in visual mode as search pattern, but do not jump to
+    " next match. 
+    " gV avoids automatic re-selection of the Visual area in select mode. 
+    vnoremap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+else
+    " Search for the [count]'th occurrence of the word nearest to the cursor. 
+    "
+    " We need <silent>, so that the :call isn't echoed. But this also swallows
+    " the echoing of the search pattern done by the star commands. Thus, we
+    " explicitly echo the search pattern. 
+    nnoremap <silent>  *  *:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
+    nnoremap <silent> g* g*:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
+    nnoremap <silent>  #  #:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
+    nnoremap <silent> g# g#:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
+
+    " Search for selected text in visual mode. 
+    vnoremap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '/'.@/<CR>gV
+    vnoremap <silent> # :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '?'.@/<CR>gV
+endif
 
 
 
@@ -116,7 +166,6 @@ function! s:AutoSearchOn()
 	autocmd CursorMovedI * call <SID>AutoSearch()
     augroup END
     doautocmd SearchHighlightingAutoSearch CursorMoved
-    echomsg "Enabled auto-search highlighting."
 endfunction
 
 function! s:AutoSearchOff()
@@ -127,7 +176,6 @@ function! s:AutoSearchOff()
     augroup SearchHighlightingAutoSearch
 	autocmd!
     augroup END
-    echomsg "Disabled auto-search highlighting."
 
     " If auto-search was turned off by the star command, inform the star command
     " that it must have turned the highlighting on, not off. (This improves the
@@ -138,9 +186,11 @@ endfunction
 function! s:ToggleAutoSearch()
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call s:AutoSearchOff()
+	echomsg "Disabled auto-search highlighting."
 	return 0
     else
 	call s:AutoSearchOn()
+	echomsg "Enabled auto-search highlighting."
 	return 1
     endif
 endfunction
