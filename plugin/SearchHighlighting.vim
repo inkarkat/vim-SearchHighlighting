@@ -39,6 +39,8 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
+"   - VIM versions ???
+"   - escaping of search pat. 
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
