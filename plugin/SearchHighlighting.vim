@@ -2,6 +2,7 @@
 "
 " DESCRIPTION:
 " Changes the "star" command '*', so that it doesn't jump to the next match. 
+" (Unless you supply a <count>, so '1*' now restores the old '*' behavior.)
 " If you issue a star command on the same text as before, the search
 " highlighting is turned off (via :nohlsearch); the search pattern remains set,
 " so a 'n' / 'N' command will turn highlighting on again. With this, you can
@@ -19,7 +20,11 @@
 " USAGE:
 "   *		Toggle search highlighting for the current whole \<word\> on/off. 
 "   g*	    	Toggle search highlighting for the current word on/off. 
-"   *	    	In visual mode, toggle search highlighting for the selection on/off. 
+"   {Visual}*  	Toggle search highlighting for the selection on/off. 
+"
+"   <count>*,	Search forward for the <count>'th occurrence of the word nearest
+"   <count>g*	to the cursor.
+"
 "   <Leader>*   Toggle auto-search highlighting. 
 "
 " INSTALLATION:
@@ -110,13 +115,30 @@ function! s:Search( text, isWholeWordSearch )
     return 1
 endfunction
 
+function! s:CountGiven(starCommand)
+    if v:count
+	execute 'normal! ' . v:count . a:starCommand
+
+	" Note: Without this self-assignment, the former search pattern is
+	" highlighted! 
+	let @/ = @/
+
+	let s:isSearchOn = 1
+	return 1
+    else
+	return 0
+    endif
+endfunction
+
 if g:SearchHighlighting_NoJump
     " Highlight current word as search pattern, but do not jump to next match. 
     "
+    " If a count is given, preserve the default behavior and jump to the
+    " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <silent>  * :<C-U>call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <silent> g* :<C-U>call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <silent>  * :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven( '*')<bar><bar><SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <silent> g* :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven('g*')<bar><bar><SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
@@ -128,6 +150,8 @@ else
     " We need <silent>, so that the :call isn't echoed. But this also swallows
     " the echoing of the search pattern done by the star commands. Thus, we
     " explicitly echo the search pattern. 
+    "
+    " The star command must come first so that it receives the optional [count]. 
     nnoremap <silent>  *  *:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
     nnoremap <silent> g* g*:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
     nnoremap <silent>  #  #:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
