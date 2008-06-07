@@ -115,8 +115,8 @@ if g:SearchHighlighting_NoJump
     "
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <silent>  * :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <silent> g* :call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <silent>  * :<C-U>call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <silent> g* :<C-U>call <SID>AutoSearchOff()<bar>if <SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
