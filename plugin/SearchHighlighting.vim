@@ -40,7 +40,6 @@
 " KNOWN PROBLEMS:
 " TODO:
 "   - VIM versions ???
-"   - escaping of search pat. 
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -51,6 +50,11 @@
 "	003	08-Jun-2008	Added original star command behavior. 
 "				Made jump behavior configurable. 
 "				New star command now also echoes search pattern. 
+"				Instead of simply using "very nomagic" (\V) in
+"				the search pattern, (try to) do proper escaping,
+"				like the star command itself. 
+"				Do a whole word search only if <cword> actually
+"				only consists of keyword characters. 
 "	002	07-Jun-2008	Implemented toggling of search highlighting. 
 "				Implemented auto-search highlighting. 
 "	001	06-Jun-2008	file creation
@@ -74,17 +78,39 @@ endif
 " invoke the mapping a second time to get the desired result. 
 let s:isSearchOn = 0
 
+let s:specialSearchCharacters = '^$.*[~'
+function! s:EscapeText( text, additionalEscapeCharacters )
+    " The ignorant approach is to use atom \V, which sets the following pattern
+    " to "very nomagic", i.e. only the backslash has special meaning. For \V, \
+    " still must be escaped. But that's not how the built-in star command works. 
+    " Instead, all special search characters must be escaped. 
+    "
+    " This works well even with <Tab> (no need to change ^I into \t), but not
+    " with a line break, which must be changed from ^M to \n. This is done with
+    " the substitute() function.
+    "
+    " We also need to escape additional characters like '/' or '?', because
+    " that's done in a search via '*', '/' or '?', too. As the character depends
+    " on the search direction ('/' vs. '?'), this is passed in. 
+    return substitute( escape(a:text, s:specialSearchCharacters . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
+endfunction
+
+function! s:MakeWholeWordSearch( text, isWholeWordSearch, pattern )
+    " The star command only creates a \<whole word\> search pattern if the
+    " <cword> actually only consists of keyword characters. 
+    if a:isWholeWordSearch && a:text =~# '^\k\+$'
+	return '\<' . a:pattern . '\>'
+    else
+	return a:pattern
+    endif
+endfunction
+
 function! s:GetSearchPattern( text, isWholeWordSearch )
-    " Atom \V sets following pattern to "very nomagic", i.e. only the backslash
-    " has special meaning.
-    " For \V, \ still must be escaped. We also escape /, because that's done in
-    " a search via '/' or '*', too. This works well even with <Tab> (no need to
-    " change ^I into \t), but not with a line break, which must be changed from
-    " ^M to \n. This is done with the substitute() function.
-    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '/\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, '/') )
 endfunction
 function! s:GetBackwardsSearchPattern( text, isWholeWordSearch )
-    return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '?\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+    " return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '?\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
+    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, '?') )
 endfunction
 
 function! s:Search( text, isWholeWordSearch )
