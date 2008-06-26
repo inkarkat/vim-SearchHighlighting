@@ -30,10 +30,16 @@
 " INSTALLATION:
 " DEPENDENCIES:
 " CONFIGURATION:
-"   To restore the original '*' behavior, i.e. jumping to the next match, use:
+"   If you do not want the new non-jumping behavior of the star commands at all: 
 "	let g:SearchHighlighting_NoJump = 0
-"   Then, the star commands will behave as usual; they only also turn off
-"   auto-search. 
+"	let g:SearchHighlighting_ExtendStandardCommands = 1
+"
+"   If you want the new non-jumping behavior, but map it to different keys:
+"	let g:SearchHighlighting_ExtendStandardCommands = 1
+"	nmap <silent> <Leader>*  <Plug>SearchHighlightingStar
+"	nmap <silent> <Leader>g* <Plug>SearchHighlightingGStar
+"	vmap <silent> <Leader>*  <Plug>SearchHighlightingStar
+"
 "
 " LIMITATIONS:
 " ASSUMPTIONS:
@@ -47,6 +53,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	27-Jun-2008	Added <Plug> mappings, so that the non-jump
+"				commands can be mapped to different keys. 
+"				Separated configuration of non-jump from
+"				extension of standard commands. 
 "	004	09-Jun-2008	BF: Escaping of backslash got lost. 
 "	003	08-Jun-2008	Added original star command behavior. 
 "				Made jump behavior configurable. 
@@ -68,6 +78,9 @@ let g:loaded_SearchHighlighting = 1
 
 if ! exists('g:SearchHighlighting_NoJump')
     let g:SearchHighlighting_NoJump = 1
+endif
+if ! exists('g:SearchHighlighting_ExtendStandardCommands')
+    let g:SearchHighlighting_ExtendStandardCommands = 0
 endif
 
 " For the toggling of hlsearch, we would need to be able to query the current
@@ -166,14 +179,25 @@ if g:SearchHighlighting_NoJump
     " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <silent>  * :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven( '*')<bar><bar><SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <silent> g* :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven('g*')<bar><bar><SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven( '*')<bar><bar><SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven('g*')<bar><bar><SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
-else
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+
+    if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
+	nmap <silent> * <Plug>SearchHighlightingStar
+    endif
+    if ! hasmapto('<Plug>SearchHighlightingGStar', 'n')
+	nmap <silent> g* <Plug>SearchHighlightingGStar
+    endif
+    if ! hasmapto('<Plug>SearchHighlightingStar', 'v')
+	vmap <silent> * <Plug>SearchHighlightingStar
+    endif
+endif
+if g:SearchHighlighting_ExtendStandardCommands
     " Search for the [count]'th occurrence of the word nearest to the cursor. 
     "
     " We need <silent>, so that the :call isn't echoed. But this also swallows
