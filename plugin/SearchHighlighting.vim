@@ -47,6 +47,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	09-Jun-2008	BF: Escaping of backslash got lost. 
 "	003	08-Jun-2008	Added original star command behavior. 
 "				Made jump behavior configurable. 
 "				New star command now also echoes search pattern. 
@@ -92,7 +93,7 @@ function! s:EscapeText( text, additionalEscapeCharacters )
     " We also need to escape additional characters like '/' or '?', because
     " that's done in a search via '*', '/' or '?', too. As the character depends
     " on the search direction ('/' vs. '?'), this is passed in. 
-    return substitute( escape(a:text, s:specialSearchCharacters . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
+    return substitute( escape(a:text, '\' . s:specialSearchCharacters . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
 endfunction
 
 function! s:MakeWholeWordSearch( text, isWholeWordSearch, pattern )
