@@ -57,7 +57,9 @@
 "
 " REVISION	DATE		REMARKS 
 "	006	29-Jun-2008	Replaced literal ^S, ^V with escaped versions to
-"				avoid :scriptencoding setting. 
+"				avoid :scriptencoding command. 
+"				Added global function SearchHighlightingNoJump()
+"				for use by other scripts. 
 "	005	27-Jun-2008	Added <Plug> mappings, so that the non-jump
 "				commands can be mapped to different keys. 
 "				Separated configuration of non-jump from
@@ -185,6 +187,14 @@ function! s:CountGiven(starCommand)
     else
 	return 0
     endif
+endfunction
+
+" This global function can be used in other scripts, to avoid complicated
+" invocations of (and the echoing inside)
+" execute "normal \<Plug>SearchHighlightingStar"
+function SearchHighlightingNoJump( starCommand, text, isWholeWordSearch )
+    call s:AutoSearchOff()
+    return s:CountGiven(a:starCommand) || s:Search(a:text, a:isWholeWordSearch)
 endfunction
 
 if g:SearchHighlighting_NoJump
