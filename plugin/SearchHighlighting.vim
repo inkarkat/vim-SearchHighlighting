@@ -40,6 +40,9 @@
 "	nmap <silent> <Leader>g* <Plug>SearchHighlightingGStar
 "	vmap <silent> <Leader>*  <Plug>SearchHighlightingStar
 "
+"   If you want a mapping to turn off hlsearch, use this:
+"	nmap <silent> <A-/> <Plug>SearchHighlightingNohlsearch
+"	vmap <silent> <A-/> <Plug>SearchHighlightingNohlsearch
 "
 " LIMITATIONS:
 " ASSUMPTIONS:
@@ -57,6 +60,7 @@
 "				commands can be mapped to different keys. 
 "				Separated configuration of non-jump from
 "				extension of standard commands. 
+"				Added <Plug> mapping for :nohlsearch. 
 "	004	09-Jun-2008	BF: Escaping of backslash got lost. 
 "	003	08-Jun-2008	Added original star command behavior. 
 "				Made jump behavior configurable. 
@@ -83,6 +87,8 @@ if ! exists('g:SearchHighlighting_ExtendStandardCommands')
     let g:SearchHighlighting_ExtendStandardCommands = 0
 endif
 
+
+
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from VIM. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
@@ -90,7 +96,14 @@ endif
 " if the user changes the hlsearch state outside of the s:Search() function,
 " e.g. by :nohlsearch or 'n' / 'N'. In these cases, the user would need to
 " invoke the mapping a second time to get the desired result. 
-let s:isSearchOn = 0
+let g:SearchHighlighting_IsSearchOn = 0
+
+" If you map to this instead of defining a separate :nohlsearch mapping, the
+" hlsearch state will be tracked more accurately. 
+nnoremap <script> <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>
+vnoremap <script> <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>gv
+
+
 
 let s:specialSearchCharacters = '^$.*[~'
 function! s:EscapeText( text, additionalEscapeCharacters )
@@ -130,17 +143,17 @@ endfunction
 function! s:Search( text, isWholeWordSearch )
     let l:searchPattern = s:GetSearchPattern( a:text, a:isWholeWordSearch )
 
-    if @/ == l:searchPattern && s:isSearchOn
+    if @/ == l:searchPattern && g:SearchHighlighting_IsSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
 	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch. 
 	"let @/ = ''
 	
-	let s:isSearchOn = 0
+	let g:SearchHighlighting_IsSearchOn = 0
 	return 0
     endif
 
     let @/ = l:searchPattern
-    let s:isSearchOn = 1
+    let g:SearchHighlighting_IsSearchOn = 1
 
     " The search pattern is added to the search history, as '/' or '*' would do. 
     call histadd('/', @/)
@@ -165,7 +178,7 @@ function! s:CountGiven(starCommand)
 	" highlighted! 
 	let @/ = @/
 
-	let s:isSearchOn = 1
+	let g:SearchHighlighting_IsSearchOn = 1
 	return 1
     else
 	return 0
@@ -256,8 +269,8 @@ function! s:AutoSearchOff()
 
     " If auto-search was turned off by the star command, inform the star command
     " that it must have turned the highlighting on, not off. (This improves the
-    " accuracy of the s:isSearchOn workaround.)
-    let s:isSearchOn = 0
+    " accuracy of the g:SearchHighlighting_IsSearchOn workaround.)
+    let g:SearchHighlighting_IsSearchOn = 0
 endfunction
 
 function! s:ToggleAutoSearch()
