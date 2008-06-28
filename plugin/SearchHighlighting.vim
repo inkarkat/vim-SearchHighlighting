@@ -56,6 +56,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	29-Jun-2008	Replaced literal ^S, ^V with escaped versions to
+"				avoid :scriptencoding setting. 
 "	005	27-Jun-2008	Added <Plug> mappings, so that the non-jump
 "				commands can be mapped to different keys. 
 "				Separated configuration of non-jump from
@@ -73,8 +75,6 @@
 "	002	07-Jun-2008	Implemented toggling of search highlighting. 
 "				Implemented auto-search highlighting. 
 "	001	06-Jun-2008	file creation
-
-scriptencoding utf-8
 
 " Avoid installing twice or when in unsupported VIM version. 
 if exists('g:loaded_SearchHighlighting')
@@ -95,10 +95,9 @@ endif
 " hlsearch state from VIM. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
 " such way, we work around this with a global flag. There will be discrepancies
-" if the user changes the hlsearch state outside of the
-" ToggleSearchHighlighting() function, e.g. by :nohlsearch or 'n' / 'N'. In
-" these cases, the user would need to invoke the mapping a second time to get
-" the desired result. 
+" if the user changes the hlsearch state outside of the s:Search() function,
+" e.g. by :nohlsearch or 'n' / 'N'. In these cases, the user would need to
+" invoke the mapping a second time to get the desired result. 
 let g:SearchHighlighting_IsSearchOn = 0
 
 " If you map to this instead of defining a separate :nohlsearch mapping, the
@@ -143,7 +142,7 @@ function! s:GetBackwardsSearchPattern( text, isWholeWordSearch )
     return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, '?') )
 endfunction
 
-function! ToggleSearchHighlighting( text, isWholeWordSearch )
+function! s:Search( text, isWholeWordSearch )
     let l:searchPattern = s:GetSearchPattern( a:text, a:isWholeWordSearch )
 
     if @/ == l:searchPattern && g:SearchHighlighting_IsSearchOn
@@ -195,13 +194,13 @@ if g:SearchHighlighting_NoJump
     " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <script> <Plug>SearchHighlightingStar	:<C-U>call AutoSearchOff()<bar>if <SID>CountGiven( '*')<bar><bar>ToggleSearchHighlighting(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <script> <Plug>SearchHighlightingGStar	:<C-U>call AutoSearchOff()<bar>if <SID>CountGiven('g*')<bar><bar>ToggleSearchHighlighting(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven( '*')<bar><bar><SID>Search(expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if <SID>CountGiven('g*')<bar><bar><SID>Search(expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if ToggleSearchHighlighting(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy:<C-U>if <SID>Search(@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
@@ -221,24 +220,24 @@ if g:SearchHighlighting_ExtendStandardCommands
     " explicitly echo the search pattern. 
     "
     " The star command must come first so that it receives the optional [count]. 
-    nnoremap <silent>  *  *:call AutoSearchOff()<bar>echo '/'.@/<CR>
-    nnoremap <silent> g* g*:call AutoSearchOff()<bar>echo '/'.@/<CR>
-    nnoremap <silent>  #  #:call AutoSearchOff()<bar>echo '?'.@/<CR>
-    nnoremap <silent> g# g#:call AutoSearchOff()<bar>echo '?'.@/<CR>
+    nnoremap <silent>  *  *:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
+    nnoremap <silent> g* g*:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
+    nnoremap <silent>  #  #:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
+    nnoremap <silent> g# g#:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
 
     " Search for selected text in visual mode. 
-    vnoremap <silent> * :<C-U>call AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '/'.@/<CR>gV
-    vnoremap <silent> # :<C-U>call AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '?'.@/<CR>gV
+    vnoremap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '/'.@/<CR>gV
+    vnoremap <silent> # :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '?'.@/<CR>gV
 endif
 
 
 
 function! s:AutoSearch()
-    if stridx('sSvV', mode()) != -1
+    if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
 	let l:save_unnamedregister = @@
 
 	let l:captureTextCommands = 'ygv'
-	if stridx('sS', mode()) != -1
+	if stridx("sS\<C-S>", mode()) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
 	    " to visual mode, then back to select mode. 
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
@@ -261,7 +260,7 @@ function! s:AutoSearchOn()
     doautocmd SearchHighlightingAutoSearch CursorMoved
 endfunction
 
-function! AutoSearchOff()
+function! s:AutoSearchOff()
     if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	" Short-circuit optimization. 
 	return
@@ -278,7 +277,7 @@ endfunction
 
 function! s:ToggleAutoSearch()
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	call AutoSearchOff()
+	call s:AutoSearchOff()
 	echomsg "Disabled auto-search highlighting."
 	return 0
     else
