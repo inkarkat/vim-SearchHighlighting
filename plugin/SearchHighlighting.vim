@@ -108,8 +108,8 @@ let g:SearchHighlighting_IsSearchOn = 0
 
 " If you map to this instead of defining a separate :nohlsearch mapping, the
 " hlsearch state will be tracked more accurately. 
-nnoremap <script> <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>
-vnoremap <script> <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>gv
+nnoremap <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>
+vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<bar>nohlsearch<CR>gv
 
 
 
@@ -232,13 +232,13 @@ if g:SearchHighlighting_NoJump
     " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump( '*',expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump('g*',expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump( '*',expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump('g*',expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<bar>execute 'normal! gvy'<bar>if SearchHighlightingNoJump('gv*',@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+    vnoremap <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<bar>execute 'normal! gvy'<bar>if SearchHighlightingNoJump('gv*',@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
@@ -325,7 +325,7 @@ function! s:ToggleAutoSearch()
     endif
 endfunction
 
-nnoremap <script> <Plug>SearchHighlightingAutoSearch :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
+nnoremap <Plug>SearchHighlightingAutoSearch :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
     nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>else<bar>nohlsearch<bar>endif<CR>
 endif
