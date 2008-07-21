@@ -181,7 +181,7 @@ endfunction
 function! s:DefaultCountStar( starCommand )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'. 
-    execute 'normal! ' . a:starCommand . 'zv'
+    execute 'normal!' a:starCommand . 'zv'
 
     " Note: Without this self-assignment, the former search pattern is
     " highlighted! 
@@ -203,7 +203,7 @@ function! s:VisualCountStar( count, starCommand, text )
 
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'. 
-    execute 'normal! ' . a:count . 'nzv'
+    execute 'normal!' a:count . 'nzv'
     return 1
 endfunction
 
@@ -280,7 +280,7 @@ function! s:AutoSearch()
 	    " to visual mode, then back to select mode. 
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
 	endif
-	execute 'normal! ' . l:captureTextCommands
+	execute 'normal!' l:captureTextCommands
 	let @/ = <SID>GetSearchPattern(@@, 0)
 
 	let @@ = l:save_unnamedregister
