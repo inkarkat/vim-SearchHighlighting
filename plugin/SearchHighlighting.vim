@@ -30,6 +30,8 @@
 "
 " INSTALLATION:
 " DEPENDENCIES:
+"   - EchoWithoutScrolling.vim (optional)
+"
 " CONFIGURATION:
 "   If you do not want the new non-jumping behavior of the star commands at all: 
 "	let g:SearchHighlighting_NoJump = 0
@@ -57,6 +59,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	007	22-Jul-2008	Now truncates echoed search pattern like the
+"				original commands, courtesy of
+"				EchoWithoutScrolling.vim. 
 "	006	29-Jun-2008	Replaced literal ^S, ^V with escaped versions to
 "				avoid :scriptencoding command. 
 "				Added global function SearchHighlightingNoJump()
@@ -225,6 +230,20 @@ function! SearchHighlightingNoJump( starCommand, text, isWholeWordSearch )
 endfunction
 
 
+
+" Use EchoWithoutScrolling#Echo to emulate the built-in truncation of the search
+" pattern (via ':set shortmess+=T'). 
+silent! call EchoWithoutScrolling#MaxLength()	" Execute a function to force autoload. 
+if exists('*EchoWithoutScrolling#Echo')
+    cnoremap <SID>EchoSearchPatternForward  call EchoWithoutScrolling#Echo('/'.@/)
+    cnoremap <SID>EchoSearchPatternBackward call EchoWithoutScrolling#Echo('?'.@/)
+else " fallback
+    cnoremap <SID>EchoSearchPatternForward  echo '/'.@/
+    cnoremap <SID>EchoSearchPatternBackward echo '?'.@/
+endif
+
+
+
 if g:SearchHighlighting_NoJump
     " Highlight current word as search pattern, but do not jump to next match. 
     "
@@ -232,13 +251,13 @@ if g:SearchHighlighting_NoJump
     " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump( '*',expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
-    nnoremap <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump('g*',expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump( '*',expand('<cword>'),1)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar><SID>EchoSearchPatternForward<bar>else<bar>nohlsearch<bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<bar>if SearchHighlightingNoJump('g*',expand('<cword>'),0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar><SID>EchoSearchPatternForward<bar>else<bar>nohlsearch<bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<bar>execute 'normal! gvy'<bar>if SearchHighlightingNoJump('gv*',@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar>echo '/'.@/<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<bar>execute 'normal! gvy'<bar>if SearchHighlightingNoJump('gv*',@@,0)<bar>if &hlsearch<bar>set hlsearch<bar>endif<bar><SID>EchoSearchPatternForward<bar>else<bar>nohlsearch<bar>endif<bar>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
@@ -258,18 +277,19 @@ if g:SearchHighlighting_ExtendStandardCommands
     " explicitly echo the search pattern. 
     "
     " The star command must come first so that it receives the optional [count]. 
-    nnoremap <silent>  *  *:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
-    nnoremap <silent> g* g*:call <SID>AutoSearchOff()<bar>echo '/'.@/<CR>
-    nnoremap <silent>  #  #:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
-    nnoremap <silent> g# g#:call <SID>AutoSearchOff()<bar>echo '?'.@/<CR>
+    nnoremap <script> <silent>  *  *:call <SID>AutoSearchOff()<bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> g* g*:call <SID>AutoSearchOff()<bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent>  #  #:call <SID>AutoSearchOff()<bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> g# g#:call <SID>AutoSearchOff()<bar><SID>EchoSearchPatternBackward<CR>
 
     " Search for selected text in visual mode. 
-    vnoremap <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '/'.@/<CR>gV
-    vnoremap <silent> # :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar>echo '?'.@/<CR>gV
+    vnoremap <script> <silent> * :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar><SID>EchoSearchPatternForward<CR>gV
+    vnoremap <script> <silent> # :<C-U>call <SID>AutoSearchOff()<bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<bar>unlet save_unnamedregister<bar><SID>EchoSearchPatternBackward<CR>gV
 endif
 
 
 
+"------------------------------------------------------------------------------
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
 	let l:save_unnamedregister = @@
