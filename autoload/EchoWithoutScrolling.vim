@@ -70,6 +70,24 @@ endfunction
 
 " TODO: Handle tabs. In an :echo, tabstop is fixed at 8. 
 function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
+"*******************************************************************************
+"* PURPOSE:
+"   Replaces <Tab> characters in a:text with the correct amount of <Space>,
+"   depending on the a:tabstop value. a:startColumn specifies at which start
+"   column a:text will be printed. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   none
+"* EFFECTS / POSTCONDITIONS:
+"   none
+"* INPUTS:
+"   a:text	    Text to be rendered. 
+"   a:tabstop	    tabstop value (The built-in :echo command always uses a
+"		    fixed value of 8; it isn't affected by the 'tabstop'
+"		    setting.)
+"   a:startColumn   Column at which the text is to be rendered (typically 1). 
+"* RETURN VALUES: 
+"   a:text with replaced <Tab> characters. 
+"*******************************************************************************
     if a:text !~# "\t"
 	return a:text
     endif
@@ -87,42 +105,61 @@ function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
     
 endfunction
 
-function! EchoWithoutScrolling#Truncate( text ) 
+function! EchoWithoutScrolling#Truncate( prefix, text ) 
+"*******************************************************************************
+"* PURPOSE:
+"   Truncate the concatenation of a:prefix and a:text so that it can be echoed
+"   to the command line without causing the "Hit ENTER" prompt. Truncation will
+"   only happen in (the middle of) a:text; the a:prefix will always be included. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   none
+"* EFFECTS / POSTCONDITIONS:
+"   none
+"* INPUTS:
+"   a:prefix	(optional) text before the main text. 
+"   a:text	Text which may be truncated to fit. 
+"* RETURN VALUES: 
+"   Truncated concatenation of a:prefix and a:text. 
+"*******************************************************************************
     if &shortmess !~# 'T'
 	" People who have removed the 'T' flag from 'shortmess' want no
 	" truncation. 
-	return a:text
+	return a:prefix . a:text
     endif
 
-    let l:maxLength = EchoWithoutScrolling#MaxLength()
+    let l:prefix = EchoWithoutScrolling#RenderTabs(a:prefix, 8, 1)
+    let l:maxLength = EchoWithoutScrolling#MaxLength() - strlen(l:prefix)
+    if l:maxLength <= 0
+	return strpart( l:prefix, 0, l:maxLength )
+    endif
 
-    let l:text = EchoWithoutScrolling#RenderTabs(a:text, 8, 1)
+    let l:text = EchoWithoutScrolling#RenderTabs(a:text, 8, 1 + strlen(l:prefix))
     if strlen(l:text) > l:maxLength
 	let l:front = l:maxLength / 2 - 1
 	let l:back  = (l:maxLength % 2 == 0 ? (l:front - 1) : l:front)
-	return strpart(l:text, 0, l:front) . '...' . strpart(l:text, strlen(l:text) - l:back)
+	return l:prefix . strpart(l:text, 0, l:front) . '...' . strpart(l:text, strlen(l:text) - l:back)
     endif
-    return l:text
+    return l:prefix . l:text
 endfunction
 
-function! EchoWithoutScrolling#Echo( text ) 
-    echo EchoWithoutScrolling#Truncate( a:text )
+function! EchoWithoutScrolling#Echo( prefix, text ) 
+    echo EchoWithoutScrolling#Truncate( a:prefix, a:text )
 endfunction
-function! EchoWithoutScrolling#EchoWithHl( highlightGroup, text ) 
+function! EchoWithoutScrolling#EchoWithHl( highlightGroup, prefix, text ) 
     if ! empty(a:highlightGroup)
 	execute 'echohl' a:highlightGroup
     endif
-    echo EchoWithoutScrolling#Truncate( a:text )
+    echo EchoWithoutScrolling#Truncate( a:prefix, a:text )
     echohl NONE
 endfunction
-function! EchoWithoutScrolling#EchoMsg( text ) 
-    echomsg EchoWithoutScrolling#Truncate( a:text )
+function! EchoWithoutScrolling#EchoMsg( prefix, text ) 
+    echomsg EchoWithoutScrolling#Truncate( a:prefix, a:text )
 endfunction
-function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text ) 
+function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, prefix, text ) 
     if ! empty(a:highlightGroup)
 	execute 'echohl' a:highlightGroup
     endif
-    echomsg EchoWithoutScrolling#Truncate( a:text )
+    echomsg EchoWithoutScrolling#Truncate( a:prefix, a:text )
     echohl NONE
 endfunction
 
