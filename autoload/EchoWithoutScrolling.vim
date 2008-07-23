@@ -10,6 +10,10 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
+" - Length of unprintable characters (e.g. ^X) must be accounted for; use
+"   strtrans(). 
+" - Truncation may split inside multi-byte characters, resulting in e.g.
+"   bla<ef>...blubb
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -68,7 +72,6 @@ function! EchoWithoutScrolling#GetTabReplacement( column, tabstop )
     return a:tabstop - (a:column - 1) % a:tabstop
 endfunction
 
-" TODO: Handle tabs. In an :echo, tabstop is fixed at 8. 
 function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
 "*******************************************************************************
 "* PURPOSE:
@@ -105,61 +108,56 @@ function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
     
 endfunction
 
-function! EchoWithoutScrolling#Truncate( prefix, text ) 
+function! EchoWithoutScrolling#Truncate( text ) 
 "*******************************************************************************
 "* PURPOSE:
-"   Truncate the concatenation of a:prefix and a:text so that it can be echoed
-"   to the command line without causing the "Hit ENTER" prompt. Truncation will
-"   only happen in (the middle of) a:text; the a:prefix will always be included. 
+"   Truncate a:text so that it can be echoed to the command line without causing
+"   the "Hit ENTER" prompt. Truncation will only happen in (the middle of)
+"   a:text. 
 "* ASSUMPTIONS / PRECONDITIONS:
 "   none
 "* EFFECTS / POSTCONDITIONS:
 "   none
 "* INPUTS:
-"   a:prefix	(optional) text before the main text. 
 "   a:text	Text which may be truncated to fit. 
 "* RETURN VALUES: 
-"   Truncated concatenation of a:prefix and a:text. 
+"   Truncated a:text. 
 "*******************************************************************************
     if &shortmess !~# 'T'
 	" People who have removed the 'T' flag from 'shortmess' want no
 	" truncation. 
-	return a:prefix . a:text
+	return a:text
     endif
 
-    let l:prefix = EchoWithoutScrolling#RenderTabs(a:prefix, 8, 1)
-    let l:maxLength = EchoWithoutScrolling#MaxLength() - strlen(l:prefix)
-    if l:maxLength <= 0
-	return strpart( l:prefix, 0, l:maxLength )
-    endif
+    let l:maxLength = EchoWithoutScrolling#MaxLength()
 
-    let l:text = EchoWithoutScrolling#RenderTabs(a:text, 8, 1 + strlen(l:prefix))
+    let l:text = EchoWithoutScrolling#RenderTabs(a:text, 8, 1)
     if strlen(l:text) > l:maxLength
 	let l:front = l:maxLength / 2 - 1
 	let l:back  = (l:maxLength % 2 == 0 ? (l:front - 1) : l:front)
-	return l:prefix . strpart(l:text, 0, l:front) . '...' . strpart(l:text, strlen(l:text) - l:back)
+	return strpart(l:text, 0, l:front) . '...' . strpart(l:text, strlen(l:text) - l:back)
     endif
-    return l:prefix . l:text
+    return l:text
 endfunction
 
-function! EchoWithoutScrolling#Echo( prefix, text ) 
-    echo EchoWithoutScrolling#Truncate( a:prefix, a:text )
+function! EchoWithoutScrolling#Echo( text ) 
+    echo EchoWithoutScrolling#Truncate( a:text )
 endfunction
-function! EchoWithoutScrolling#EchoWithHl( highlightGroup, prefix, text ) 
+function! EchoWithoutScrolling#EchoWithHl( highlightGroup, text ) 
     if ! empty(a:highlightGroup)
 	execute 'echohl' a:highlightGroup
     endif
-    echo EchoWithoutScrolling#Truncate( a:prefix, a:text )
+    echo EchoWithoutScrolling#Truncate( a:text )
     echohl NONE
 endfunction
-function! EchoWithoutScrolling#EchoMsg( prefix, text ) 
-    echomsg EchoWithoutScrolling#Truncate( a:prefix, a:text )
+function! EchoWithoutScrolling#EchoMsg( text ) 
+    echomsg EchoWithoutScrolling#Truncate( a:text )
 endfunction
-function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, prefix, text ) 
+function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text ) 
     if ! empty(a:highlightGroup)
 	execute 'echohl' a:highlightGroup
     endif
-    echomsg EchoWithoutScrolling#Truncate( a:prefix, a:text )
+    echomsg EchoWithoutScrolling#Truncate( a:text )
     echohl NONE
 endfunction
 
