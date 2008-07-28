@@ -111,6 +111,21 @@ endfunction
 function! s:ReverseStr( expr )
     return join( reverse( split( a:expr, '\zs' ) ), '' )
 endfunction
+function! s:HasMoreThanVirtCol( expr, virtCol )
+    return (match( a:expr, '^.*\%>' . a:virtCol . 'v' ) != -1)
+endfunction
+function! s:VirtColStrFromStart( expr, virtCol )
+    " Must add 1 because a "before-column" pattern is used in case the exact
+    " column cannot be matched (because its halfway through a tab or other wide
+    " character). 
+    return matchstr(a:expr, '^.*\%<' . (a:virtCol + 1) . 'v')
+endfunction
+function! s:VirtColStrFromEnd( expr, virtCol )
+    " Virtual columns are always counted from the start, not the end. To specify
+    " the column counting from the end, the string is reversed during the
+    " matching. 
+    return s:ReverseStr( s:VirtColStrFromStart( s:ReverseStr(a:expr), a:virtCol ) )
+endfunction
 
 function! EchoWithoutScrolling#Truncate( text ) 
 "*******************************************************************************
@@ -138,22 +153,22 @@ function! EchoWithoutScrolling#Truncate( text )
     " The \%<23v regexp item uses the local 'tabstop' value to determine the
     " virtual column. As we want to echo with default tabstop 8, we need to
     " temporarily set it up this way. 
-    let l:save_ts = &l:ts
-    setlocal ts=8
+    let l:save_ts = &l:tabstop
+    setlocal tabstop=8
 
     let l:text = a:text
-    if match( l:text, '^.*\%>' . l:maxLength . 'v' ) != -1
-	let l:front = l:maxLength / 2 - 1
-	let l:back  = (l:maxLength % 2 == 0 ? (l:front - 1) : l:front)
-"****D echomsg '**** ' l:maxLength ':' l:front '-' l:back
-	" Must add 2 to the column in the \%<23v regexp: 1 to translate length
-	" into columns (which start at 1, not 0), 1 because a "before-column"
-	" pattern is used in case the exact column cannot be matched (because
-	" its halfway through a tab or other wide character). 
-	let l:text =  matchstr(l:text, '^.*\%<' . (l:front + 2) . 'v') . '...' . s:ReverseStr(matchstr(s:ReverseStr(l:text), '^.*\%<' . (l:back + 2) . 'v'))
-    endif
-
-    let &l:ts = l:save_ts
+    try
+	if s:HasMoreThanVirtCol(l:text, l:maxLength)
+	    " We need 3 characters for the '...'; 1 must be added to both lengths
+	    " because columns start at 1, not 0. 
+	    let l:frontCol = l:maxLength / 2
+	    let l:backCol  = (l:maxLength % 2 == 0 ? (l:frontCol - 1) : l:frontCol)
+"**** echomsg '**** ' l:maxLength ':' l:frontCol '-' l:backCol
+	    let l:text =  s:VirtColStrFromStart(l:text, l:frontCol) . '...' . s:VirtColStrFromEnd(l:text, l:backCol)
+	endif
+    finally
+	let &l:tabstop = l:save_ts
+    endtry
     return l:text
 endfunction
 
