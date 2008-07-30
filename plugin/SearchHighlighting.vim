@@ -57,6 +57,10 @@
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
+" History:
+"   I came up with this on my own; however, the idea can be traced back to
+"   francoissteinmetz@yahoo.fr and da.thompson@yahoo.com in vimtip #1:
+"   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
 "	007	22-Jul-2008	Now truncates echoed search pattern like the
