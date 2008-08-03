@@ -10,10 +10,6 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
-" - Length of unprintable characters (e.g. ^X) must be accounted for; use
-"   strtrans(). 
-" - Truncation may split inside multi-byte characters, resulting in e.g.
-"   bla<ef>...blubb
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -66,46 +62,6 @@ function! EchoWithoutScrolling#MaxLength()
 	let l:maxLength -= 1
     endif
     return l:maxLength
-endfunction
-
-function! EchoWithoutScrolling#GetTabReplacement( column, tabstop )
-    return a:tabstop - (a:column - 1) % a:tabstop
-endfunction
-
-function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
-"*******************************************************************************
-"* PURPOSE:
-"   Replaces <Tab> characters in a:text with the correct amount of <Space>,
-"   depending on the a:tabstop value. a:startColumn specifies at which start
-"   column a:text will be printed. 
-"* ASSUMPTIONS / PRECONDITIONS:
-"   none
-"* EFFECTS / POSTCONDITIONS:
-"   none
-"* INPUTS:
-"   a:text	    Text to be rendered. 
-"   a:tabstop	    tabstop value (The built-in :echo command always uses a
-"		    fixed value of 8; it isn't affected by the 'tabstop'
-"		    setting.)
-"   a:startColumn   Column at which the text is to be rendered (typically 1). 
-"* RETURN VALUES: 
-"   a:text with replaced <Tab> characters. 
-"*******************************************************************************
-    if a:text !~# "\t"
-	return a:text
-    endif
-
-    let l:pos = 0
-    let l:text = a:text
-    while l:pos < strlen(l:text)
-	let l:pos = stridx( l:text, "\t", l:pos )
-	if l:pos == -1
-	    break
-	endif
-	let l:text = strpart( l:text, 0, l:pos ) . repeat( ' ', EchoWithoutScrolling#GetTabReplacement( l:pos + a:startColumn, a:tabstop ) ) . strpart( l:text, l:pos + 1 )
-    endwhile
-    return l:text
-    
 endfunction
 
 function! s:ReverseStr( expr )
