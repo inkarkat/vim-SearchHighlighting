@@ -131,7 +131,7 @@ function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
     
 endfunction
 
-function! EchoWithoutScrolling#Truncate( text ) 
+function! EchoWithoutScrolling#Truncate( text, ... ) 
 "*******************************************************************************
 "* PURPOSE:
 "   Truncate a:text so that it can be echoed to the command line without causing
@@ -143,6 +143,9 @@ function! EchoWithoutScrolling#Truncate( text )
 "   none
 "* INPUTS:
 "   a:text	Text which may be truncated to fit. 
+"   a:reservedColumns	Optional number of columns that are already taken in the
+"			line; if specified, a:text will be truncated to
+"			(MaxLength() - a:reservedColumns). 
 "* RETURN VALUES: 
 "   Truncated a:text. 
 "*******************************************************************************
@@ -152,7 +155,11 @@ function! EchoWithoutScrolling#Truncate( text )
 	return a:text
     endif
 
-    let l:maxLength = EchoWithoutScrolling#MaxLength()
+    let l:reservedColumns = (a:0 > 0 ? a:1 : 0)
+    let l:maxLength = EchoWithoutScrolling#MaxLength() - l:reservedColumns
+    if l:maxLength <= 0
+	return ''
+    endif
 
     " The \%<23v regexp item uses the local 'tabstop' value to determine the
     " virtual column. As we want to echo with default tabstop 8, we need to
