@@ -17,6 +17,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	16-Aug-2008	Split off TruncateTo() from Truncate(). 
 "	001	22-Jul-2008	file creation
 
 " Avoid installing when in unsupported VIM version. 
@@ -131,12 +132,50 @@ function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
     
 endfunction
 
+function! EchoWithoutScrolling#TruncateTo( text, length ) 
+"*******************************************************************************
+"* PURPOSE:
+"   Truncate a:text to a maximum of a:length virtual columns. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   none
+"* EFFECTS / POSTCONDITIONS:
+"   none
+"* INPUTS:
+"   a:text	Text which may be truncated to fit. 
+"* RETURN VALUES: 
+"   a:length	Maximum virtual columns for a:text. 
+"*******************************************************************************
+    if a:length <= 0
+	return ''
+    endif
+
+    " The \%<23v regexp item uses the local 'tabstop' value to determine the
+    " virtual column. As we want to echo with default tabstop 8, we need to
+    " temporarily set it up this way. 
+    let l:save_ts = &l:tabstop
+    setlocal tabstop=8
+
+    let l:text = a:text
+    try
+	if s:HasMoreThanVirtCol(l:text, a:length)
+	    " We need 3 characters for the '...'; 1 must be added to both lengths
+	    " because columns start at 1, not 0. 
+	    let l:frontCol = a:length / 2
+	    let l:backCol  = (a:length % 2 == 0 ? (l:frontCol - 1) : l:frontCol)
+"**** echomsg '**** ' a:length ':' l:frontCol '-' l:backCol
+	    let l:text =  s:VirtColStrFromStart(l:text, l:frontCol) . '...' . s:VirtColStrFromEnd(l:text, l:backCol)
+	endif
+    finally
+	let &l:tabstop = l:save_ts
+    endtry
+    return l:text
+endfunction
 function! EchoWithoutScrolling#Truncate( text, ... ) 
 "*******************************************************************************
 "* PURPOSE:
 "   Truncate a:text so that it can be echoed to the command line without causing
-"   the "Hit ENTER" prompt. Truncation will only happen in (the middle of)
-"   a:text. 
+"   the "Hit ENTER" prompt (if desired by the user through the 'shortmess'
+"   option). Truncation will only happen in (the middle of) a:text. 
 "* ASSUMPTIONS / PRECONDITIONS:
 "   none
 "* EFFECTS / POSTCONDITIONS:
@@ -157,30 +196,8 @@ function! EchoWithoutScrolling#Truncate( text, ... )
 
     let l:reservedColumns = (a:0 > 0 ? a:1 : 0)
     let l:maxLength = EchoWithoutScrolling#MaxLength() - l:reservedColumns
-    if l:maxLength <= 0
-	return ''
-    endif
 
-    " The \%<23v regexp item uses the local 'tabstop' value to determine the
-    " virtual column. As we want to echo with default tabstop 8, we need to
-    " temporarily set it up this way. 
-    let l:save_ts = &l:tabstop
-    setlocal tabstop=8
-
-    let l:text = a:text
-    try
-	if s:HasMoreThanVirtCol(l:text, l:maxLength)
-	    " We need 3 characters for the '...'; 1 must be added to both lengths
-	    " because columns start at 1, not 0. 
-	    let l:frontCol = l:maxLength / 2
-	    let l:backCol  = (l:maxLength % 2 == 0 ? (l:frontCol - 1) : l:frontCol)
-"**** echomsg '**** ' l:maxLength ':' l:frontCol '-' l:backCol
-	    let l:text =  s:VirtColStrFromStart(l:text, l:frontCol) . '...' . s:VirtColStrFromEnd(l:text, l:backCol)
-	endif
-    finally
-	let &l:tabstop = l:save_ts
-    endtry
-    return l:text
+    return EchoWithoutScrolling#TruncateTo( a:text, l:maxLength )
 endfunction
 
 function! EchoWithoutScrolling#Echo( text ) 
@@ -191,7 +208,7 @@ function! EchoWithoutScrolling#EchoWithHl( highlightGroup, text )
 	execute 'echohl' a:highlightGroup
     endif
     echo EchoWithoutScrolling#Truncate( a:text )
-    echohl NONE
+    echohl None
 endfunction
 function! EchoWithoutScrolling#EchoMsg( text ) 
     echomsg EchoWithoutScrolling#Truncate( a:text )
@@ -201,7 +218,7 @@ function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text )
 	execute 'echohl' a:highlightGroup
     endif
     echomsg EchoWithoutScrolling#Truncate( a:text )
-    echohl NONE
+    echohl None
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
