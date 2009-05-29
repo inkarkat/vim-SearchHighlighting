@@ -56,7 +56,7 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
-"   - VIM versions ???
+"   - Vim versions ???
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -68,6 +68,10 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	009	15-May-2009	BF: Translating line breaks in search pattern
+"				via EchoWithoutScrolling#TranslateLineBreaks()
+"				to avoid echoing only the last part of the
+"				search pattern when it contains line breaks. 
 "	008	31-Jul-2008	Added <Plug>SearchHighlightingToggleHlsearch. 
 "	007	22-Jul-2008	Now truncates echoed search pattern like the
 "				original commands, courtesy of
@@ -96,7 +100,7 @@
 "				Implemented auto-search highlighting. 
 "	001	06-Jun-2008	file creation
 
-" Avoid installing twice or when in unsupported VIM version. 
+" Avoid installing twice or when in unsupported Vim version. 
 if exists('g:loaded_SearchHighlighting')
     finish
 endif
@@ -115,8 +119,8 @@ endif
 " pattern (via ':set shortmess+=T'). 
 silent! call EchoWithoutScrolling#MaxLength()	" Execute a function to force autoload. 
 if exists('*EchoWithoutScrolling#Echo')
-    cnoremap <SID>EchoSearchPatternForward  call EchoWithoutScrolling#Echo('/'.@/)
-    cnoremap <SID>EchoSearchPatternBackward call EchoWithoutScrolling#Echo('?'.@/)
+    cnoremap <SID>EchoSearchPatternForward  call EchoWithoutScrolling#Echo(EchoWithoutScrolling#TranslateLineBreaks('/'.@/))
+    cnoremap <SID>EchoSearchPatternBackward call EchoWithoutScrolling#Echo(EchoWithoutScrolling#TranslateLineBreaks('?'.@/))
 else " fallback
     cnoremap <SID>EchoSearchPatternForward  echo '/'.@/
     cnoremap <SID>EchoSearchPatternBackward echo '?'.@/
@@ -125,7 +129,7 @@ endif
 
 
 " For the toggling of hlsearch, we would need to be able to query the current
-" hlsearch state from VIM. (No this is not &hlsearch, we want to know whether
+" hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
 " such way, we work around this with a global flag. There will be discrepancies
 " if the user changes the hlsearch state outside of the
