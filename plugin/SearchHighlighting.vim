@@ -30,7 +30,8 @@
 "
 " INSTALLATION:
 " DEPENDENCIES:
-"   - EchoWithoutScrolling.vim (optional)
+"   - SearchHighlighting.vim autoload script. 
+"   - EchoWithoutScrolling.vim (optional). 
 "
 " CONFIGURATION:
 "   If you do not want the new non-jumping behavior of the star commands at all: 
@@ -56,7 +57,6 @@
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
-"   - Vim versions ???
 "
 " Copyright: (C) 2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -68,6 +68,8 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	010	30-May-2009	Tested with Vim 6 and disabled functionality
+"				that does not work there. 
 "	009	15-May-2009	BF: Translating line breaks in search pattern
 "				via EchoWithoutScrolling#TranslateLineBreaks()
 "				to avoid echoing only the last part of the
@@ -334,6 +336,11 @@ endif
 
 
 "------------------------------------------------------------------------------
+if v:version < 700
+    function! s:AutoSearchOff()
+    endfunction
+    finish
+endif
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
 	let l:save_unnamedregister = @@
