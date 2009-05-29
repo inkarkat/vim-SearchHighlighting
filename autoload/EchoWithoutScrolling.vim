@@ -27,12 +27,16 @@
 " TODO:
 "   - Consider 'cmdheight', add argument isSingleLine. 
 "
-" Copyright: (C) 2008 by Ingo Karkat
+" Copyright: (C) 2008-2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	15-May-2009	Added utility function
+"				EchoWithoutScrolling#TranslateLineBreaks() to
+"				help clients who want to echo a single line, but
+"				have text that potentially contains line breaks. 
 "	002	16-Aug-2008	Split off TruncateTo() from Truncate(). 
 "	001	22-Jul-2008	file creation
 
@@ -224,6 +228,36 @@ function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text )
     endif
     echomsg EchoWithoutScrolling#Truncate( a:text )
     echohl None
+endfunction
+
+function! EchoWithoutScrolling#TranslateLineBreaks( text )
+"*******************************************************************************
+"* PURPOSE:
+"   Translate embedded line breaks in a:text into a printable characters to
+"   avoid that a single-line string is split into multiple lines (and thus
+"   broken over multiple lines or mostly obscured) by the :echo command and
+"   EchoWithoutScrolling#Echo() functions. 
+"
+"   For the :echo command, strtrans() is not necessary; unprintable characters
+"   are automatically translated (and shown in a different highlighting, an
+"   advantage over indiscriminate preprocessing with strtrans()). However, :echo
+"   observes embedded line breaks (in contrast to :echomsg), which would mess up
+"   a single-line message that contains embedded \n = <CR> = ^M or <LF> = ^@. 
+"
+"* LIMITATIONS:
+"   When :echo'd, the translated line breaks are not rendered with the typical
+"   'SpecialKey' highlighting. 
+" 
+"* ASSUMPTIONS / PRECONDITIONS:
+"	? List of any external variable, control, or other element whose state affects this procedure.
+"* EFFECTS / POSTCONDITIONS:
+"	? List of the procedure's effect on each external variable, control, or other element.
+"* INPUTS:
+"   a:text	Text. 
+"* RETURN VALUES: 
+"   Text with translated line breaks; the text will :echo into a single line. 
+"*******************************************************************************
+    return substitute(a:text, "[\<CR>\<LF>]", '\=strtrans(submatch(0))', 'g')
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
