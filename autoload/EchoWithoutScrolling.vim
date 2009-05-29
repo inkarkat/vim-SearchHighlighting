@@ -244,6 +244,9 @@ function! EchoWithoutScrolling#TranslateLineBreaks( text )
 "   observes embedded line breaks (in contrast to :echomsg), which would mess up
 "   a single-line message that contains embedded \n = <CR> = ^M or <LF> = ^@. 
 "
+"   For the :echomsg and :echoerr commands, neither strtrans() nor this function
+"   are necessary; all translation is done by the built-in command. 
+"
 "* LIMITATIONS:
 "   When :echo'd, the translated line breaks are not rendered with the typical
 "   'SpecialKey' highlighting. 
