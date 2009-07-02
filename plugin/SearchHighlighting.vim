@@ -30,6 +30,7 @@
 "
 " INSTALLATION:
 " DEPENDENCIES:
+"   - Requires Vim 7.0 or higher. 
 "   - SearchHighlighting.vim autoload script. 
 "   - EchoWithoutScrolling.vim (optional). 
 "
@@ -58,7 +59,7 @@
 " KNOWN PROBLEMS:
 " TODO:
 "
-" Copyright: (C) 2008 by Ingo Karkat
+" Copyright: (C) 2008-2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -68,6 +69,8 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"   	011 	30-May-2009	Moved functions from plugin to separate autoload
+"				script. 
 "	010	30-May-2009	Tested with Vim 6 and disabled functionality
 "				that does not work there. 
 "	009	15-May-2009	BF: Translating line breaks in search pattern
@@ -103,11 +106,12 @@
 "	001	06-Jun-2008	file creation
 
 " Avoid installing twice or when in unsupported Vim version. 
-if exists('g:loaded_SearchHighlighting')
+if exists('g:loaded_SearchHighlighting') || (v:version < 700)
     finish
 endif
 let g:loaded_SearchHighlighting = 1
 
+"- configuration --------------------------------------------------------------
 if ! exists('g:SearchHighlighting_NoJump')
     let g:SearchHighlighting_NoJump = 1
 endif
@@ -117,6 +121,7 @@ endif
 
 
 
+"- integration ----------------------------------------------------------------
 " Use EchoWithoutScrolling#Echo to emulate the built-in truncation of the search
 " pattern (via ':set shortmess+=T'). 
 silent! call EchoWithoutScrolling#MaxLength()	" Execute a function to force autoload. 
@@ -130,14 +135,15 @@ endif
 
 
 
+"- Toggle hlsearch ------------------------------------------------------------
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
 " such way, we work around this with a global flag. There will be discrepancies
 " if the user changes the hlsearch state outside of the
-" SearchHighlightingNoJump() function, e.g. by :nohlsearch or 'n' / 'N'. In
-" these cases, the user would need to invoke the mapping a second time to get
-" the desired result. 
+" SearchHighlighting#SearchHighlightingNoJump() function, e.g. by :nohlsearch or
+" 'n' / 'N'. In these cases, the user would need to invoke the mapping a second
+" time to get the desired result. 
 let g:SearchHighlighting_IsSearchOn = 0
 
 " If you map to this instead of defining a separate :nohlsearch mapping, the
@@ -152,144 +158,12 @@ vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSea
 " want the toggle mapping to first always clear the highlighting (as this is the
 " most common operation). Only if the mapping is invoked again at the same
 " place, hlsearch will be turned on again. 
-if v:version >= 700
-let s:ToggleHlsearchPos = []
-function! s:ToggleHlsearch()
-    let l:currentPos = [ tabpagenr(), winnr(), getpos('.') ]
-
-    if l:currentPos == s:ToggleHlsearchPos && ! g:SearchHighlighting_IsSearchOn && &hlsearch
-	" Setting this from within a function has no effect. 
-	"set hlsearch
-	let g:SearchHighlighting_IsSearchOn = 1
-    else
-	" Setting this from within a function has no effect. 
-	"nohlsearch
-	let g:SearchHighlighting_IsSearchOn = 0
-	echo (&hlsearch ? ':nohlsearch' : 'hlsearch turned off')
-    endif
-    let s:ToggleHlsearchPos = l:currentPos
-
-    return g:SearchHighlighting_IsSearchOn
-endfunction
-nnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if <SID>ToggleHlsearch()<Bar>set hlsearch<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-vnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if <SID>ToggleHlsearch()<Bar>set hlsearch<Bar>else<Bar>nohlsearch<Bar>endif<CR>gv
-endif
+nnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+vnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar>else<Bar>nohlsearch<Bar>endif<CR>gv
 
 
 
-let s:specialSearchCharacters = '^$.*[~'
-function! s:EscapeText( text, additionalEscapeCharacters )
-    " The ignorant approach is to use atom \V, which sets the following pattern
-    " to "very nomagic", i.e. only the backslash has special meaning. For \V, \
-    " still must be escaped. But that's not how the built-in star command works. 
-    " Instead, all special search characters must be escaped. 
-    "
-    " This works well even with <Tab> (no need to change ^I into \t), but not
-    " with a line break, which must be changed from ^M to \n. This is done with
-    " the substitute() function.
-    "
-    " We also need to escape additional characters like '/' or '?', because
-    " that's done in a search via '*', '/' or '?', too. As the character depends
-    " on the search direction ('/' vs. '?'), this is passed in. 
-    return substitute( escape(a:text, '\' . s:specialSearchCharacters . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
-endfunction
-
-function! s:MakeWholeWordSearch( text, isWholeWordSearch, pattern )
-    " The star command only creates a \<whole word\> search pattern if the
-    " <cword> actually only consists of keyword characters. 
-    if a:isWholeWordSearch && a:text =~# '^\k\+$'
-	return '\<' . a:pattern . '\>'
-    else
-	return a:pattern
-    endif
-endfunction
-
-function! s:GetSearchPattern( text, isWholeWordSearch )
-    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, '/') )
-endfunction
-function! s:GetBackwardsSearchPattern( text, isWholeWordSearch )
-    " return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, '?\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
-    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, '?') )
-endfunction
-
-function! s:ToggleHighlighting( text, isWholeWordSearch )
-    let l:searchPattern = s:GetSearchPattern( a:text, a:isWholeWordSearch )
-
-    if @/ == l:searchPattern && g:SearchHighlighting_IsSearchOn
-	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
-	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch. 
-	"let @/ = ''
-	
-	let g:SearchHighlighting_IsSearchOn = 0
-	return 0
-    endif
-
-    let @/ = l:searchPattern
-    let g:SearchHighlighting_IsSearchOn = 1
-
-    " The search pattern is added to the search history, as '/' or '*' would do. 
-    call histadd('/', @/)
-
-    " To enable highlighting of the search pattern (in case it was temporarily
-    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set. 
-    " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping! 
-    "if &hlsearch
-    "    set hlsearch
-    "endif
-
-    return 1
-endfunction
-
-function! s:DefaultCountStar( starCommand )
-    " Note: When typed, [*#nN] open the fold at the search result, but inside a
-    " mapping or :normal this must be done explicitly via 'zv'. 
-    execute 'normal!' a:starCommand . 'zv'
-
-    " Note: Without this self-assignment, the former search pattern is
-    " highlighted! 
-    let @/ = @/
-
-    let g:SearchHighlighting_IsSearchOn = 1
-    " With a count, search is always on; toggling is only done without a count. 
-    return 1
-endfunction
-
-function! s:VisualCountStar( count, starCommand, text )
-    let l:searchPattern = s:GetSearchPattern( a:text, 0 )
-
-    let @/ = l:searchPattern
-    let g:SearchHighlighting_IsSearchOn = 1
-
-    " The search pattern is added to the search history, as '/' or '*' would do. 
-    call histadd('/', @/)
-
-    " Note: When typed, [*#nN] open the fold at the search result, but inside a
-    " mapping or :normal this must be done explicitly via 'zv'. 
-    execute 'normal!' a:count . 'nzv'
-    return 1
-endfunction
-
-" This global function can also be used in other scripts, to avoid complicated
-" invocations of (and the echoing inside)
-" execute "normal \<Plug>SearchHighlightingStar"
-function! SearchHighlightingNoJump( starCommand, text, isWholeWordSearch )
-    call s:AutoSearchOff()
-
-    if v:count
-	if a:starCommand =~# '^gv'
-	    return s:VisualCountStar( v:count, a:starCommand, a:text )
-	else
-	    return s:DefaultCountStar( v:count . a:starCommand )
-	endif
-    else
-	return s:ToggleHighlighting( a:text, a:isWholeWordSearch )
-    endif
-endfunction
-
-
-
+"- mappings Search Highlighting -----------------------------------------------
 if g:SearchHighlighting_NoJump
     " Highlight current word as search pattern, but do not jump to next match. 
     "
@@ -297,13 +171,13 @@ if g:SearchHighlighting_NoJump
     " <count>'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call <SID>AutoSearchOff()<Bar>if SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call <SID>AutoSearchOff()<Bar>if SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>if SearchHighlighting#SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call <SID>AutoSearchOff()<Bar>let save_unnamedregister=@@<Bar>execute 'normal! gvy'<Bar>if SearchHighlightingNoJump('gv*',@@,0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<Bar>execute 'normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@@,0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
@@ -323,82 +197,22 @@ if g:SearchHighlighting_ExtendStandardCommands
     " explicitly echo the search pattern. 
     "
     " The star command must come first so that it receives the optional [count]. 
-    nnoremap <script> <silent>  *  *:call <SID>AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent> g* g*:call <SID>AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent>  #  #:call <SID>AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
-    nnoremap <script> <silent> g# g#:call <SID>AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent>  *  *:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> g* g*:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent>  #  #:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> g# g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
 
     " Search for selected text in visual mode. 
-    vnoremap <script> <silent> * :<C-U>call <SID>AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=<SID>GetSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
-    vnoremap <script> <silent> # :<C-U>call <SID>AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=<SID>GetBackwardsSearchPattern(@@,0)<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
+    vnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
+    vnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
 endif
 
 
 
-"------------------------------------------------------------------------------
-if v:version < 700
-    function! s:AutoSearchOff()
-    endfunction
-    finish
-endif
-function! s:AutoSearch()
-    if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
-	let l:save_unnamedregister = @@
-
-	let l:captureTextCommands = 'ygv'
-	if stridx("sS\<C-S>", mode()) != -1
-	    " To be able to yank in select mode, we need to temporarily switch
-	    " to visual mode, then back to select mode. 
-	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
-	endif
-	execute 'normal!' l:captureTextCommands
-	let @/ = <SID>GetSearchPattern(@@, 0)
-
-	let @@ = l:save_unnamedregister
-    else
-	let @/ = <SID>GetSearchPattern(expand('<cword>'), 1)
-    endif
-endfunction
-
-function! s:AutoSearchOn()
-    augroup SearchHighlightingAutoSearch
-	autocmd!
-	autocmd CursorMoved  * call <SID>AutoSearch()
-	autocmd CursorMovedI * call <SID>AutoSearch()
-    augroup END
-    doautocmd SearchHighlightingAutoSearch CursorMoved
-endfunction
-
-function! s:AutoSearchOff()
-    if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	" Short-circuit optimization. 
-	return
-    endif
-    augroup SearchHighlightingAutoSearch
-	autocmd!
-    augroup END
-
-    " If auto-search was turned off by the star command, inform the star command
-    " that it must have turned the highlighting on, not off. (This improves the
-    " accuracy of the g:SearchHighlighting_IsSearchOn workaround.)
-    let g:SearchHighlighting_IsSearchOn = 0
-endfunction
-
-function! s:ToggleAutoSearch()
-    if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	call s:AutoSearchOff()
-	echomsg "Disabled auto-search highlighting."
-	return 0
-    else
-	call s:AutoSearchOn()
-	echomsg "Enabled auto-search highlighting."
-	return 1
-    endif
-endfunction
-
-nnoremap <Plug>SearchHighlightingAutoSearch :if <SID>ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+"- mappings Autosearch --------------------------------------------------------
+nnoremap <Plug>SearchHighlightingAutoSearch :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
-    nmap <silent> <Leader>* :if <SID>ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nmap <silent> <Leader>* :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
