@@ -2,7 +2,7 @@
 "
 " DESCRIPTION:
 " Changes the "star" command '*', so that it doesn't jump to the next match. 
-" (Unless you supply a <count>, so '1*' now restores the old '*' behavior.)
+" (Unless you supply a [count], so '1*' now restores the old '*' behavior.)
 " If you issue a star command on the same text as before, the search
 " highlighting is turned off (via :nohlsearch); the search pattern remains set,
 " so a 'n' / 'N' command will turn highlighting on again. With this, you can
@@ -22,9 +22,9 @@
 "   g*	    	Toggle search highlighting for the current word on/off. 
 "   {Visual}*  	Toggle search highlighting for the selection on/off. 
 "
-"   <count>*,	Search forward for the <count>'th occurrence of the word nearest
-"   <count>g*	to the cursor.
-"   {Visual}<count>*
+"   [count]*,	Search forward for the [count]'th occurrence of the word nearest
+"   [count]g*	to the cursor.
+"   {Visual}[count]*
 "
 "   <Leader>*   Toggle auto-search highlighting. 
 "
@@ -69,6 +69,11 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	012	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
+"				flag with s:isSearchOn and
+"				SearchHighlighting#SearchOn(),
+"				SearchHighlighting#SearchOff() and
+"				SearchHighlighting#IsSearch() functions. 
 "   	011 	30-May-2009	Moved functions from plugin to separate autoload
 "				script. 
 "	010	30-May-2009	Tested with Vim 6 and disabled functionality
@@ -85,8 +90,8 @@
 "				avoid :scriptencoding command. 
 "				Added global function SearchHighlightingNoJump()
 "				for use by other scripts. 
-"				BF: <count>* didn't open fold at match. 
-"				ENH: Added {Visual}<count>* command. 
+"				BF: [count]* didn't open fold at match. 
+"				ENH: Added {Visual}[count]* command. 
 "	005	27-Jun-2008	Added <Plug> mappings, so that the non-jump
 "				commands can be mapped to different keys. 
 "				Separated configuration of non-jump from
@@ -136,20 +141,10 @@ endif
 
 
 "- Toggle hlsearch ------------------------------------------------------------
-" For the toggling of hlsearch, we would need to be able to query the current
-" hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
-" :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
-" such way, we work around this with a global flag. There will be discrepancies
-" if the user changes the hlsearch state outside of the
-" SearchHighlighting#SearchHighlightingNoJump() function, e.g. by :nohlsearch or
-" 'n' / 'N'. In these cases, the user would need to invoke the mapping a second
-" time to get the desired result. 
-let g:SearchHighlighting_IsSearchOn = 0
-
 " If you map to this instead of defining a separate :nohlsearch mapping, the
 " hlsearch state will be tracked more accurately. 
-nnoremap <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<Bar>nohlsearch<Bar>echo ':nohlsearch'<CR>
-vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>let g:SearchHighlighting_IsSearchOn = 0<Bar>nohlsearch<CR>gv
+nnoremap <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<Bar>echo ':nohlsearch'<CR>
+vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<CR>gv
 
 " Toggle hlsearch. This differs from ':set invhlsearch' in that it only
 " temporarily clears the highlighting; a new search or 'n' command will
@@ -168,7 +163,7 @@ if g:SearchHighlighting_NoJump
     " Highlight current word as search pattern, but do not jump to next match. 
     "
     " If a count is given, preserve the default behavior and jump to the
-    " <count>'th occurence. 
+    " [count]'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
     nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
