@@ -8,31 +8,84 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
+"				flag with s:isSearchOn and
+"				SearchHighlighting#SearchOn(),
+"				SearchHighlighting#SearchOff() and
+"				SearchHighlighting#IsSearch() functions. 
+"				The toggle algorithm now only assumes that the hlsearch
+"				state is "on" if the state was not explicitly
+"				turned on. This allows third parties to :call
+"				SearchHighlighting#SearchOff() and have the next
+"				toggle command correctly turn highlighting back
+"				on. 
 "	001	30-May-2009	Moved functions from plugin to separate autoload
 "				script.
 "				file creation
 
-let s:ToggleHlsearchPos = []
+"- Toggle hlsearch ------------------------------------------------------------
+" For the toggling of hlsearch, we would need to be able to query the current
+" hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
+" :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
+" such way, we work around this with a separate flag, s:isSearchOn. There will
+" be discrepancies if the user changes the hlsearch state outside of the
+" SearchHighlighting#SearchHighlightingNoJump() function, e.g. by :nohlsearch or
+" 'n' / 'N'. In these cases, the user would need to invoke the mapping a second
+" time to get the desired result. Other mappings or scripts that change the
+" hlsearch state can update the flag by calling SearchHighlighting#SearchOn() /
+" SearchHighlighting#SearchOff(). 
+let s:isSearchOn = 0
+
+
+" The last toggle position is initialized with an invalid position. It will be
+" set on every toggle, and is invalidated when the search highlighting is
+" explicitly set via SearchHighlighting#SearchOn() / 
+" SearchHighlighting#SearchOff. 
+let s:lastToggleHlsearchPos = []
+function! SearchHighlighting#SearchOff()
+    let s:isSearchOn = 0
+    unlet! s:lastToggleHlsearchPos
+endfunction
+function! SearchHighlighting#SearchOn()
+    let s:isSearchOn = 1
+    unlet! s:lastToggleHlsearchPos
+endfunction
+function! SearchHighlighting#IsSearch()
+    return s:isSearchOn
+endfunction
+
+" The toggle algorithm assumes that the hlsearch state is "on" unless the state
+" was explicitly turned on, or a preceding toggle to "off" happened at the
+" current cursor position. 
+" With this, the built-in search commands ('/', '?', '*', '#', 'n', 'N') can
+" turn on hlsearch without informing us (as long as the jump does not position
+" the cursor to the position where the last toggle "off" was done; in this case,
+" the algorithm will be wrong and the toggle must be repeated). 
 function! SearchHighlighting#ToggleHlsearch()
     let l:currentPos = [ tabpagenr(), winnr(), getpos('.') ]
 
-    if l:currentPos == s:ToggleHlsearchPos && ! g:SearchHighlighting_IsSearchOn && &hlsearch
+    let l:isExplicitSetting = ! exists('s:lastToggleHlsearchPos')
+    if ! &hlsearch
+	let s:isSearchOn = 0
+	echo 'hlsearch turned off'
+    elseif ! s:isSearchOn && (l:isExplicitSetting || (! l:isExplicitSetting && l:currentPos == s:lastToggleHlsearchPos))
 	" Setting this from within a function has no effect. 
 	"set hlsearch
-	let g:SearchHighlighting_IsSearchOn = 1
+	let s:isSearchOn = 1
     else
 	" Setting this from within a function has no effect. 
 	"nohlsearch
-	let g:SearchHighlighting_IsSearchOn = 0
-	echo (&hlsearch ? ':nohlsearch' : 'hlsearch turned off')
+	let s:isSearchOn = 0
+	echo ':nohlsearch'
     endif
-    let s:ToggleHlsearchPos = l:currentPos
+    let s:lastToggleHlsearchPos = l:currentPos
 
-    return g:SearchHighlighting_IsSearchOn
+    return s:isSearchOn
 endfunction
 
 
 
+"- Search Highlighting --------------------------------------------------------
 let s:specialSearchCharacters = '^$.*[~'
 function! s:EscapeText( text, additionalEscapeCharacters )
     " The ignorant approach is to use atom \V, which sets the following pattern
@@ -89,17 +142,17 @@ endfunction
 function! s:ToggleHighlighting( text, isWholeWordSearch )
     let l:searchPattern = SearchHighlighting#GetSearchPattern( a:text, a:isWholeWordSearch, '/' )
 
-    if @/ == l:searchPattern && g:SearchHighlighting_IsSearchOn
+    if @/ == l:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
 	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch. 
 	"let @/ = ''
 	
-	let g:SearchHighlighting_IsSearchOn = 0
+	let s:isSearchOn = 0
 	return 0
     endif
 
     let @/ = l:searchPattern
-    let g:SearchHighlighting_IsSearchOn = 1
+    let s:isSearchOn = 1
 
     " The search pattern is added to the search history, as '/' or '*' would do. 
     call histadd('/', @/)
@@ -125,7 +178,7 @@ function! s:DefaultCountStar( starCommand )
     " highlighted! 
     let @/ = @/
 
-    let g:SearchHighlighting_IsSearchOn = 1
+    let s:isSearchOn = 1
     " With a count, search is always on; toggling is only done without a count. 
     return 1
 endfunction
@@ -134,7 +187,7 @@ function! s:VisualCountStar( count, starCommand, text )
     let l:searchPattern = SearchHighlighting#GetSearchPattern( a:text, 0, '/' )
 
     let @/ = l:searchPattern
-    let g:SearchHighlighting_IsSearchOn = 1
+    let s:isSearchOn = 1
 
     " The search pattern is added to the search history, as '/' or '*' would do. 
     call histadd('/', @/)
@@ -164,6 +217,7 @@ endfunction
 
 
 
+"- Autosearch -----------------------------------------------------------------
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
 	let l:save_unnamedregister = @@
@@ -203,8 +257,8 @@ function! SearchHighlighting#AutoSearchOff()
 
     " If auto-search was turned off by the star command, inform the star command
     " that it must have turned the highlighting on, not off. (This improves the
-    " accuracy of the g:SearchHighlighting_IsSearchOn workaround.)
-    let g:SearchHighlighting_IsSearchOn = 0
+    " accuracy of the s:isSearchOn workaround.)
+    let s:isSearchOn = 0
 endfunction
 
 function! SearchHighlighting#ToggleAutoSearch()
