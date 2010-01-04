@@ -31,6 +31,7 @@
 " INSTALLATION:
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
+"   - ingosearch.vim autoload script. 
 "   - SearchHighlighting.vim autoload script. 
 "   - EchoWithoutScrolling.vim (optional). 
 "
@@ -69,6 +70,8 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	014	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
+"				separate ingosearch.vim utility module. 
 "	013	06-Oct-2009	Do not define * and # mappings for select mode;
 "				printable characters should start insert mode. 
 "	012	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
@@ -200,8 +203,8 @@ if g:SearchHighlighting_ExtendStandardCommands
     nnoremap <script> <silent> g# g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
 
     " Search for selected text in visual mode. 
-    xnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
-    xnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
+    xnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=ingosearch#GetSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
+    xnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=ingosearch#GetSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
 endif
 
 
