@@ -69,6 +69,8 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	013	06-Oct-2009	Do not define * and # mappings for select mode;
+"				printable characters should start insert mode. 
 "	012	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
 "				flag with s:isSearchOn and
 "				SearchHighlighting#SearchOn(),
@@ -180,8 +182,8 @@ if g:SearchHighlighting_NoJump
     if ! hasmapto('<Plug>SearchHighlightingGStar', 'n')
 	nmap <silent> g* <Plug>SearchHighlightingGStar
     endif
-    if ! hasmapto('<Plug>SearchHighlightingStar', 'v')
-	vmap <silent> * <Plug>SearchHighlightingStar
+    if ! hasmapto('<Plug>SearchHighlightingStar', 'x')
+	xmap <silent> * <Plug>SearchHighlightingStar
     endif
 endif
 if g:SearchHighlighting_ExtendStandardCommands
@@ -198,8 +200,8 @@ if g:SearchHighlighting_ExtendStandardCommands
     nnoremap <script> <silent> g# g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
 
     " Search for selected text in visual mode. 
-    vnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
-    vnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
+    xnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
+    xnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=SearchHighlighting#GetSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
 endif
 
 
