@@ -10,7 +10,9 @@
 "
 " REVISION	DATE		REMARKS 
 "	003	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
-"				separate ingosearch.vim utility module. 
+"				separate ingosearch.vim utility module and
+"				renamed to
+"				ingosearch#LiteralTextToSearchPattern(). 
 "	002	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
 "				flag with s:isSearchOn and
 "				SearchHighlighting#SearchOn(),
@@ -90,7 +92,7 @@ endfunction
 
 "- Search Highlighting --------------------------------------------------------
 function! s:ToggleHighlighting( text, isWholeWordSearch )
-    let l:searchPattern = ingosearch#GetSearchPattern( a:text, a:isWholeWordSearch, '/' )
+    let l:searchPattern = ingosearch#LiteralTextToSearchPattern( a:text, a:isWholeWordSearch, '/' )
 
     if @/ == l:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
@@ -134,7 +136,7 @@ function! s:DefaultCountStar( starCommand )
 endfunction
 
 function! s:VisualCountStar( count, starCommand, text )
-    let l:searchPattern = ingosearch#GetSearchPattern( a:text, 0, '/' )
+    let l:searchPattern = ingosearch#LiteralTextToSearchPattern( a:text, 0, '/' )
 
     let @/ = l:searchPattern
     let s:isSearchOn = 1
@@ -179,11 +181,11 @@ function! s:AutoSearch()
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
 	endif
 	execute 'normal!' l:captureTextCommands
-	let @/ = ingosearch#GetSearchPattern(@@, 0, '/')
+	let @/ = ingosearch#LiteralTextToSearchPattern(@@, 0, '/')
 
 	let @@ = l:save_unnamedregister
     else
-	let @/ = ingosearch#GetSearchPattern(expand('<cword>'), 1, '/')
+	let @/ = ingosearch#LiteralTextToSearchPattern(expand('<cword>'), 1, '/')
     endif
 endfunction
 
