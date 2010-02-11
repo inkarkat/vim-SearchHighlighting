@@ -2,7 +2,7 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2010 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -11,6 +11,8 @@
 "	002	05-Jan-2010	BUG: Wrong escaping with 'nomagic' setting.
 "				Corrected s:specialSearchCharacters for that
 "				case. 
+"				Renamed ingosearch#GetSearchPattern() to
+"				ingosearch#LiteralTextToSearchPattern(). 
 "	001	05-Jan-2010	file creation with content from
 "				SearchHighlighting.vim. 
 
@@ -61,7 +63,7 @@ function! s:MakeWholeWordSearch( text, isWholeWordSearch, pattern )
     endif
 endfunction
 
-function! ingosearch#GetSearchPattern( text, isWholeWordSearch, additionalEscapeCharacters )
+function! ingosearch#LiteralTextToSearchPattern( text, isWholeWordSearch, additionalEscapeCharacters )
 "*******************************************************************************
 "* PURPOSE:
 "   Convert literal a:text into a regular expression, similar to what the
