@@ -8,8 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	24-Mar-2010	Added ingointegration#BufferRangeToLineRangeCommand(). 
 "	001	19-Mar-2010	file creation
 
+function! s:OpfuncExpression( opfunc )
 "******************************************************************************
 "* PURPOSE:
 "   Define a custom operator mapping "\xx{motion}" (where \xx is a:mapKeys) that
@@ -29,7 +31,6 @@
 "* RETURN VALUES: 
 "   None. 
 "******************************************************************************
-function! s:OpfuncExpression( opfunc )
     let &opfunc = a:opfunc
     return 'g@'
 endfunction
@@ -44,6 +45,44 @@ function! ingointegration#OperatorMappingForRangeCommand( mapArgs, mapKeys, rang
     \)
 
     execute 'nnoremap <expr>' a:mapArgs a:mapKeys '<SID>OpfuncExpression(''<SID>' . l:rangeCommandOperator . ''')'
+endfunction
+
+
+function! ingointegration#BufferRangeToLineRangeCommand( cmd ) range
+"******************************************************************************
+"* MOTIVATION:
+"   You want to invoke a command :Foo in a line-wise mapping <Leader>foo; the
+"   command has a default range=%. The simplest solution is
+"	nnoremap <Leader>foo :<C-u>.Foo<CR>
+"   but that doesn't support a [count]. You cannot use
+"	nnoremap <Leader>foo :Foo<CR>
+"   neither, because then the mapping will work on the entire buffer if no
+"   [count] is given. This utility function wraps the Foo command, passes the
+"   given range, and falls back to the current line when no [count] is given: 
+"	nnoremap <Leader>foo :call ingointegration#BufferRangeToLineRangeCommand('Foo')<CR>
+"
+"* PURPOSE:
+"   Always pass the line-wise range to a:cmd. 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:cmd   Ex command which has a default range=%. 
+"* RETURN VALUES: 
+"   None. 
+"******************************************************************************
+    try
+	execute a:firstline . ',' . a:lastline . a:cmd
+    catch /^Vim\%((\a\+)\)\=:E/
+	echohl ErrorMsg
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away. 
+	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echomsg v:errmsg
+	echohl None
+    endtry
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
