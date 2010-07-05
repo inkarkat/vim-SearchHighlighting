@@ -85,4 +85,34 @@ function! ingointegration#BufferRangeToLineRangeCommand( cmd ) range
     endtry
 endfunction
 
+
+let s:autocmdCnt = 0
+function! ingointegration#DoWhenBufLoaded( command )
+"******************************************************************************
+"* MOTIVATION:
+"   You want execute a command from a ftplugin (e.g. "normal! gg0") that only is
+"   effective when the buffer is already fully loaded, modelines have been
+"   processed, other autocmds have run, etc. 
+"
+"* PURPOSE:
+"   Schedule the passed a:command to execute once after the current buffer has
+"   been fully loaded. 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:command	Ex command to be executed. 
+"* RETURN VALUES: 
+"   None. 
+"******************************************************************************
+    let s:autocmdCnt += 1
+    let l:groupName = 'ingointegration' . s:autocmdCnt
+    execute 'augroup' l:groupName
+	autocmd!
+	execute 'autocmd BufWinEnter <buffer> execute' string(a:command) '| autocmd!' l:groupName '* <buffer>'
+    augroup END
+endfunction
+
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
