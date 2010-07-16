@@ -151,8 +151,9 @@ function! EchoWithoutScrolling#TruncateTo( text, length )
 "   none
 "* INPUTS:
 "   a:text	Text which may be truncated to fit. 
-"* RETURN VALUES: 
 "   a:length	Maximum virtual columns for a:text. 
+"* RETURN VALUES: 
+"   None. 
 "*******************************************************************************
     if a:length <= 0
 	return ''
