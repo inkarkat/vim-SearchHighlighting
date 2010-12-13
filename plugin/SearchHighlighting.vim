@@ -179,7 +179,7 @@ if g:SearchHighlighting_NoJump
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<Bar>execute 'normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@@,0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<Bar>execute 'silent normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@@,0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
