@@ -216,11 +216,11 @@ endfunction
 function! SearchHighlighting#ToggleAutoSearch()
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call SearchHighlighting#AutoSearchOff()
-	echomsg "Disabled auto-search highlighting."
+	echomsg "Disabled auto-search highlighting"
 	return 0
     else
 	call SearchHighlighting#AutoSearchOn()
-	echomsg "Enabled auto-search highlighting."
+	echomsg "Enabled auto-search highlighting"
 	return 1
     endif
 endfunction
