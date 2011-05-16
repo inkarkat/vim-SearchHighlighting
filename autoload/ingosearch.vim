@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	12-Feb-2010	Added ingosearch#WildcardExprToSearchPattern()
+"				from the :Help command in ingocommands.vim. 
 "	002	05-Jan-2010	BUG: Wrong escaping with 'nomagic' setting.
 "				Corrected s:specialSearchCharacters for that
 "				case. 
@@ -69,9 +71,9 @@ function! ingosearch#LiteralTextToSearchPattern( text, isWholeWordSearch, additi
 "   Convert literal a:text into a regular expression, similar to what the
 "   built-in * command does. 
 "* ASSUMPTIONS / PRECONDITIONS:
-"	? List of any external variable, control, or other element whose state affects this procedure.
+"   None. 
 "* EFFECTS / POSTCONDITIONS:
-"	? List of the procedure's effect on each external variable, control, or other element.
+"   None. 
 "* INPUTS:
 "   a:text  Literal text. 
 "   a:isWholeWordSearch	Flag whether only whole words (* command) or any
@@ -87,6 +89,30 @@ function! ingosearch#LiteralTextToSearchPattern( text, isWholeWordSearch, additi
 "*******************************************************************************
     " return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, a:additionalEscapeCharacters . '\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
     return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, a:additionalEscapeCharacters) )
+endfunction
+
+function! ingosearch#WildcardExprToSearchPattern( wildcardExpr, additionalEscapeCharacters )
+"*******************************************************************************
+"* PURPOSE:
+"   Convert a shell-like a:wildcardExpr which may contain wildcards ? and * into
+"   a regular expression. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:wildcardExpr  Text containing file wildcards. 
+"   a:additionalEscapeCharacters    For use in the / command, add '/', for the
+"				    backward search command ?, add '?'. For
+"				    assignment to @/, always add '/', regardless
+"				    of the search direction; this is how Vim
+"				    escapes it, too. For use in search(), pass
+"				    nothing. 
+"* RETURN VALUES: 
+"   Regular expression for matching a:wildcardExpr. 
+"*******************************************************************************
+    " From the ? and * and [xyz] wildcards; we emulate the first two here: 
+    return '\V' . substitute( substitute( escape(a:wildcardExpr, '\' . a:additionalEscapeCharacters), '?', '\\.', 'g' ), '*', '\\.\\*', 'g' )
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
