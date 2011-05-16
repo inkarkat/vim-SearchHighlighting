@@ -70,6 +70,16 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	015	14-Dec-2010	BUG: :silent'ing yank command to avoid "N lines
+"				yanked" followed by "More" prompt when using *
+"				on multi-line visual selection. 
+"				Adding intermediate
+"				<Plug>SearchHighlightingExtende... mappings for
+"				g:SearchHighlighting_ExtendStandardCommands
+"				branch to avoid errors in SearchRepeat.vim when
+"				re-mapping the complex RHS of the mappings. Now,
+"				the simple <Plug> mapping can be easily
+"				remapped. 
 "	014	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
 "				separate ingosearch.vim utility module and
 "				renamed to
@@ -199,14 +209,20 @@ if g:SearchHighlighting_ExtendStandardCommands
     " explicitly echo the search pattern. 
     "
     " The star command must come first so that it receives the optional [count]. 
-    nnoremap <script> <silent>  *  *:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent> g* g*:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent>  #  #:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
-    nnoremap <script> <silent> g# g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar   *:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGStar g*:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash   #:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGHash g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
+    nmap <silent>  * <Plug>SearchHighlightingExtendedStar
+    nmap <silent> g* <Plug>SearchHighlightingExtendedGStar
+    nmap <silent>  # <Plug>SearchHighlightingExtendedHash
+    nmap <silent> g# <Plug>SearchHighlightingExtendedGHash
 
     " Search for selected text in visual mode. 
-    xnoremap <script> <silent> * :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=ingosearch#LiteralTextToSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
-    xnoremap <script> <silent> # :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=ingosearch#LiteralTextToSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
+    xnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy/<C-R>=ingosearch#LiteralTextToSearchPattern(@@,0,'/')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternForward<CR>gV
+    xnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_unnamedregister=@@<CR>gvy?<C-R>=ingosearch#LiteralTextToSearchPattern(@@,0,'?')<CR><CR>:let @@=save_unnamedregister<Bar>unlet save_unnamedregister<Bar><SID>EchoSearchPatternBackward<CR>gV
+    xmap <silent> * <Plug>SearchHighlightingExtendedStar
+    xmap <silent> # <Plug>SearchHighlightingExtendedHash
 endif
 
 
