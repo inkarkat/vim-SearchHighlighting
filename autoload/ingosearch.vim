@@ -8,6 +8,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	10-Jun-2011	Add ingosearch#NormalizeMagicness(). 
 "	004	17-May-2011	Make ingosearch#EscapeText() public. 
 "				Extract ingosearch#GetSpecialSearchCharacters()
 "				from s:specialSearchCharacters and expose it. 
@@ -118,6 +119,28 @@ function! ingosearch#WildcardExprToSearchPattern( wildcardExpr, additionalEscape
 "*******************************************************************************
     " From the ? and * and [xyz] wildcards; we emulate the first two here: 
     return '\V' . substitute( substitute( escape(a:wildcardExpr, '\' . a:additionalEscapeCharacters), '?', '\\.', 'g' ), '*', '\\.\\*', 'g' )
+endfunction
+
+function! ingosearch#NormalizeMagicness( pattern )
+"******************************************************************************
+"* PURPOSE:
+"   Return normalizing /\m (or /\M) if a:pattern contains atom(s) that change
+"   the default magicness. This makes it possible to append another pattern
+"   without having a:pattern affect it. 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:pattern	Regular expression to observe. 
+"* RETURN VALUES: 
+"   Normalizing atom or empty string. 
+"******************************************************************************
+    let l:normalizingAtom = (&magic ? 'm' : 'M')
+    let l:magicChangeAtoms = substitute('vmMV', l:normalizingAtom, '', '')
+
+    return (a:pattern =~# '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\[' . l:magicChangeAtoms . ']' ? '\' . l:normalizingAtom : '')
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
