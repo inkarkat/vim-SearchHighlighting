@@ -2,12 +2,15 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010 by Ingo Karkat
+" Copyright: (C) 2010-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	17-May-2011	Make ingosearch#EscapeText() public. 
+"				Extract ingosearch#GetSpecialSearchCharacters()
+"				from s:specialSearchCharacters and expose it. 
 "	003	12-Feb-2010	Added ingosearch#WildcardExprToSearchPattern()
 "				from the :Help command in ingocommands.vim. 
 "	002	05-Jan-2010	BUG: Wrong escaping with 'nomagic' setting.
@@ -18,9 +21,11 @@
 "	001	05-Jan-2010	file creation with content from
 "				SearchHighlighting.vim. 
 
-" The set of characters that must be escaped depends on the 'magic' setting. 
-let s:specialSearchCharacters = ['^$', '^$.*[~']
-function! s:EscapeText( text, additionalEscapeCharacters )
+function! ingosearch#GetSpecialSearchCharacters()
+    " The set of characters that must be escaped depends on the 'magic' setting. 
+    return ['^$', '^$.*[~'][&magic]
+endfunction
+function! ingosearch#EscapeText( text, additionalEscapeCharacters )
 "*******************************************************************************
 "* PURPOSE:
 "   Escape the literal a:text for use in search command. 
@@ -52,7 +57,7 @@ function! s:EscapeText( text, additionalEscapeCharacters )
 "* RETURN VALUES: 
 "   Regular expression for matching a:text. 
 "*******************************************************************************
-    return substitute( escape(a:text, '\' . s:specialSearchCharacters[&magic] . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
+    return substitute( escape(a:text, '\' . ingosearch#GetSpecialSearchCharacters() . a:additionalEscapeCharacters), "\n", '\\n', 'ge' )
 endfunction
 
 function! s:MakeWholeWordSearch( text, isWholeWordSearch, pattern )
@@ -88,7 +93,7 @@ function! ingosearch#LiteralTextToSearchPattern( text, isWholeWordSearch, additi
 "   Regular expression for matching a:text. 
 "*******************************************************************************
     " return '\V' . (a:isWholeWordSearch ? '\<' : '') . substitute( escape(a:text, a:additionalEscapeCharacters . '\'), "\n", '\\n', 'ge' ) . (a:isWholeWordSearch ? '\>' : '')
-    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, s:EscapeText( a:text, a:additionalEscapeCharacters) )
+    return s:MakeWholeWordSearch( a:text, a:isWholeWordSearch, ingosearch#EscapeText( a:text, a:additionalEscapeCharacters) )
 endfunction
 
 function! ingosearch#WildcardExprToSearchPattern( wildcardExpr, additionalEscapeCharacters )
