@@ -121,12 +121,12 @@ function! ingosearch#WildcardExprToSearchPattern( wildcardExpr, additionalEscape
     return '\V' . substitute( substitute( escape(a:wildcardExpr, '\' . a:additionalEscapeCharacters), '?', '\\.', 'g' ), '*', '\\.\\*', 'g' )
 endfunction
 
-function! ingosearch#NormalizeMagicness( pattern )
+function! ingosearch#GetNormalizeMagicnessAtom( pattern )
 "******************************************************************************
 "* PURPOSE:
-"   Return normalizing /\m (or /\M) if a:pattern contains atom(s) that change
-"   the default magicness. This makes it possible to append another pattern
-"   without having a:pattern affect it. 
+"   Return normalizing \m (or \M) if a:pattern contains atom(s) that change the
+"   default magicness. This makes it possible to append another pattern without
+"   having a:pattern affect it. 
 "
 "* ASSUMPTIONS / PRECONDITIONS:
 "   None. 
@@ -141,6 +141,96 @@ function! ingosearch#NormalizeMagicness( pattern )
     let l:magicChangeAtoms = substitute('vmMV', l:normalizingAtom, '', '')
 
     return (a:pattern =~# '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\[' . l:magicChangeAtoms . ']' ? '\' . l:normalizingAtom : '')
+endfunction
+
+let s:magicAtomsExpr = '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\[vmMV]'
+let s:specialSearchCharacterExpressions = {
+\   'v': '\W',
+\   'm': '[\\^$.*[~]',
+\   'M': '[\\^$]',
+\   'V': '\\',
+\}
+function! s:ConvertMagicness( pattern, sourceSpecialCharacterExpr, targetSpecialCharacterExpr )
+    let l:isEscaped = 0
+    let l:chars = split(a:pattern, '\zs') 
+    for l:index in range(len(l:chars))
+	let l:char = l:chars[l:index]
+
+	if (l:char =~# a:sourceSpecialCharacterExpr) + (l:char =~# a:targetSpecialCharacterExpr) == 1
+	    " The current character belongs to different classes in source and target. 
+	    if l:isEscaped
+		let l:chars[l:index - 1] = ''
+	    else
+		let l:chars[l:index] = '\' . l:char
+	    endif
+	endif
+
+	if l:char ==# '\'
+	    let l:isEscaped = ! l:isEscaped
+	else
+	    let l:isEscaped = 0
+	endif
+    endfor
+
+    return join(l:chars, '')
+endfunction
+function! ingosearch#NormalizeMagicness( pattern )
+"******************************************************************************
+"* PURPOSE:
+"   Remove any \v, /m, \M, \V atoms from a:pattern that change the magicness,
+"   and re-write the pattern (by selective escaping and unescaping) into an
+"   equivalent pattern that is based on the current 'magic' setting. 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:pattern	Regular expression that may contain atoms that affect the
+"		magicness. 
+"* RETURN VALUES: 
+"   Equivalent pattern that has any atoms affecting the magicness removed and is
+"   based on the current 'magic' setting. 
+"******************************************************************************
+    let l:prevIndex = 0
+    let l:index = 0
+    let l:patternFragments = []
+    while ! empty(a:pattern)
+	let l:index = match(a:pattern, s:magicAtomsExpr, l:prevIndex)
+	if l:index == -1
+	    call add(l:patternFragments, strpart(a:pattern, l:prevIndex))
+	    break
+	endif
+	call add(l:patternFragments, strpart(a:pattern, l:prevIndex, (l:index - l:prevIndex)))
+	call add(l:patternFragments, strpart(a:pattern, l:index, 2))
+	let l:prevIndex = l:index + 2
+    endwhile
+
+"****D echomsg string(l:patternFragments)
+    let l:currentMagicMode = (&magic ? 'm' : 'M')
+    let l:defaultMagicMode = l:currentMagicMode
+
+    for l:fragmentIndex in range(len(l:patternFragments))
+	let l:fragment = l:patternFragments[l:fragmentIndex]
+	if l:fragment =~# s:magicAtomsExpr
+	    let l:currentMagicMode = l:fragment[1]
+	    let l:patternFragments[l:fragmentIndex] = ''
+	    continue
+	endif
+
+	if l:currentMagicMode ==# l:defaultMagicMode
+	    " No need for conversion. 
+	    continue
+	endif
+
+	let l:patternFragments[l:fragmentIndex] = s:ConvertMagicness(
+	\   l:fragment,
+	\   s:specialSearchCharacterExpressions[l:currentMagicMode],
+	\   s:specialSearchCharacterExpressions[l:defaultMagicMode]
+	\)
+    endfor
+"****D echomsg string(l:patternFragments)
+    return join(l:patternFragments, '')
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
