@@ -1,6 +1,7 @@
 " ingosearch.vim: Custom search functions. 
 "
 " DEPENDENCIES:
+"   - ingocollections.vim autoload script for ingosearch#NormalizeMagicness(). 
 "
 " Copyright: (C) 2010-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -144,6 +145,9 @@ function! ingosearch#GetNormalizeMagicnessAtom( pattern )
 endfunction
 
 let s:magicAtomsExpr = '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\[vmMV]'
+function! ingosearch#HasMagicAtoms( pattern )
+    return a:pattern =~# s:magicAtomsExpr
+endfunction
 let s:specialSearchCharacterExpressions = {
 \   'v': '\W',
 \   'm': '[\\^$.*[~]',
@@ -192,24 +196,15 @@ function! ingosearch#NormalizeMagicness( pattern )
 "   Equivalent pattern that has any atoms affecting the magicness removed and is
 "   based on the current 'magic' setting. 
 "******************************************************************************
-    let l:prevIndex = 0
-    let l:index = 0
-    let l:patternFragments = []
-    while ! empty(a:pattern)
-	let l:index = match(a:pattern, s:magicAtomsExpr, l:prevIndex)
-	if l:index == -1
-	    call add(l:patternFragments, strpart(a:pattern, l:prevIndex))
-	    break
-	endif
-	call add(l:patternFragments, strpart(a:pattern, l:prevIndex, (l:index - l:prevIndex)))
-	call add(l:patternFragments, strpart(a:pattern, l:index, 2))
-	let l:prevIndex = l:index + 2
-    endwhile
-
-"****D echomsg string(l:patternFragments)
     let l:currentMagicMode = (&magic ? 'm' : 'M')
     let l:defaultMagicMode = l:currentMagicMode
-
+    let l:patternFragments = ingocollections#SplitKeepSeparators(a:pattern, s:magicAtomsExpr, 1)
+    " Because we asked to keep any empty fragments, we can easily test whether
+    " there's any work to do. 
+    if len(l:patternFragments) == 1
+	return a:pattern
+    endif
+"****D echomsg string(l:patternFragments)
     for l:fragmentIndex in range(len(l:patternFragments))
 	let l:fragment = l:patternFragments[l:fragmentIndex]
 	if l:fragment =~# s:magicAtomsExpr
