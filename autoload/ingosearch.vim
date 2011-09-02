@@ -9,6 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	02-Sep-2011	Add ingosearch#GetLastForwardSearchPattern(). 
 "	005	10-Jun-2011	Add ingosearch#NormalizeMagicness(). 
 "	004	17-May-2011	Make ingosearch#EscapeText() public. 
 "				Extract ingosearch#GetSpecialSearchCharacters()
@@ -226,6 +227,24 @@ function! ingosearch#NormalizeMagicness( pattern )
     endfor
 "****D echomsg string(l:patternFragments)
     return join(l:patternFragments, '')
+endfunction
+
+function! ingosearch#GetLastForwardSearchPattern()
+"******************************************************************************
+"* PURPOSE:
+"   Get @/, but also handle the case where the pattern was set from a backward
+"   search, and doesn't have "/" characters properly escaped. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   None. 
+"* RETURN VALUES: 
+"   Last search pattern ready to use in a :s/{pat}/ command, with forward
+"   slashes properly escaped. 
+"******************************************************************************
+    return substitute(@/, '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!/', '\\/', 'g')
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
