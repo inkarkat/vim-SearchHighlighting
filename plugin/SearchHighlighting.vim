@@ -70,6 +70,10 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	017	10-Jun-2011	Duplicate invocation of
+"				SearchHighlighting#AutoSearchOff(); it's also
+"				done in
+"				SearchHighlighting#SearchHighlightingNoJump(). 
 "	016	17-May-2011	Also save and restore regtype of the unnamed
 "				register in mappings. 
 "				Also avoid clobbering the selection and
@@ -187,13 +191,13 @@ if g:SearchHighlighting_NoJump
     " [count]'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>if SearchHighlighting#SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_cb=&cb<Bar>let save_reg=getreg('"')<Bar>let save_regtype=getregtype('"')<Bar>execute 'silent normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@",0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>call setreg('"', save_reg, save_regtype)<Bar>let &cb=save_cb<Bar>unlet save_cb<Bar>unlet save_reg<Bar>unlet save_regtype<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>let save_cb=&cb<Bar>let save_reg=getreg('"')<Bar>let save_regtype=getregtype('"')<Bar>execute 'silent normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@",0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>call setreg('"', save_reg, save_regtype)<Bar>let &cb=save_cb<Bar>unlet save_cb<Bar>unlet save_reg<Bar>unlet save_regtype<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
