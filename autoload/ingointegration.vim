@@ -2,12 +2,13 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010 by Ingo Karkat
+" Copyright: (C) 2010-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	12-Sep-2011	Add ingointegration#GetVisualSelection(). 
 "	003	06-Jul-2010	Added ingointegration#DoWhenBufLoaded(). 
 "	002	24-Mar-2010	Added ingointegration#BufferRangeToLineRangeCommand(). 
 "	001	19-Mar-2010	file creation
@@ -129,6 +130,33 @@ function! ingointegration#DoWhenBufLoaded( command, ... )
 	" later on. 
 	execute 'autocmd BufWinLeave,CursorHold,CursorHoldI,WinLeave <buffer> autocmd!' l:groupName '* <buffer>'
     augroup END
+endfunction
+
+
+
+function! ingointegration#GetVisualSelection()
+"******************************************************************************
+"* PURPOSE:
+"   Retrieve the contents of the current visual selection without clobbering any
+"   register. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   Visual selection is / has been made. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   None. 
+"* RETURN VALUES: 
+"   Text of visual selection. 
+"******************************************************************************
+    let l:save_clipboard = &clipboard
+    set clipboard= " Avoid clobbering the selection and clipboard registers. 
+    let l:save_reg = getreg('"')
+    let l:save_regmode = getregtype('"')
+    execute 'silent normal! gvy'
+    let l:selection = @"
+    call setreg('"', l:save_reg, l:save_regmode)
+    let &clipboard = l:save_clipboard
+    return l:selection
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
