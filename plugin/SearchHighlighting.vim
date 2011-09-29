@@ -31,6 +31,7 @@
 " INSTALLATION:
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
+"   - ingointegration.vim autoload script. 
 "   - ingosearch.vim autoload script. 
 "   - SearchHighlighting.vim autoload script. 
 "   - EchoWithoutScrolling.vim (optional). 
@@ -70,6 +71,12 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	018	12-Sep-2011	Use ingointegration#GetVisualSelection() instead
+"				of inline capture. 
+"				Visual * and # mappings with jumping behavior
+"				now support [count], too, and use
+"				c_CTRL-R_CTRL-R for literal insertion into
+"				command line. 
 "	017	10-Jun-2011	Duplicate invocation of
 "				SearchHighlighting#AutoSearchOff(); it's also
 "				done in
@@ -197,7 +204,7 @@ if g:SearchHighlighting_NoJump
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>let save_cb=&cb<Bar>let save_reg=getreg('"')<Bar>let save_regtype=getregtype('"')<Bar>execute 'silent normal! gvy'<Bar>if SearchHighlighting#SearchHighlightingNoJump('gv*',@",0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<Bar>call setreg('"', save_reg, save_regtype)<Bar>let &cb=save_cb<Bar>unlet save_cb<Bar>unlet save_reg<Bar>unlet save_regtype<CR>gV
+    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('gv*', ingointegration#GetVisualSelection(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap <silent> * <Plug>SearchHighlightingStar
@@ -227,8 +234,10 @@ if g:SearchHighlighting_ExtendStandardCommands
     nmap <silent> g# <Plug>SearchHighlightingExtendedGHash
 
     " Search for selected text in visual mode. 
-    xnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_cb=&cb<Bar>let save_reg=getreg('"')<Bar>let save_regtype=getregtype('"')<CR>gvy/<C-R>=ingosearch#LiteralTextToSearchPattern(@",0,'/')<CR><CR>:call setreg('"', save_reg, save_regtype)<Bar>let &cb=save_cb<Bar>unlet save_cb<Bar>unlet save_reg<Bar>unlet save_regtype<Bar><SID>EchoSearchPatternForward<CR>gV
-    xnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<Bar>let save_cb=&cb<Bar>let save_reg=getreg('"')<Bar>let save_regtype=getregtype('"')<CR>gvy?<C-R>=ingosearch#LiteralTextToSearchPattern(@",0,'?')<CR><CR>:call setreg('"', save_reg, save_regtype)<Bar>let &cb=save_cb<Bar>unlet save_cb<Bar>unlet save_reg<Bar>unlet save_regtype<Bar><SID>EchoSearchPatternBackward<CR>gV
+    nnoremap <expr> <SID>(SearchForwardWithCount)  (v:count ? v:count : '') . '/'
+    nnoremap <expr> <SID>(SearchBackwardWithCount) (v:count ? v:count : '') . '?'
+    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchForwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '/')<CR><CR>:<SID>EchoSearchPatternForward<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchBackwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '?')<CR><CR>:<SID>EchoSearchPatternBackward<CR>gV
     xmap <silent> * <Plug>SearchHighlightingExtendedStar
     xmap <silent> # <Plug>SearchHighlightingExtendedHash
 endif
