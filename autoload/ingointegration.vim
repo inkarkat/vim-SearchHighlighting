@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	22-Sep-2011	Include ingointegration#IsOnSyntaxItem() from
+"				SearchInSyntax.vim to allow reuse. 
 "	004	12-Sep-2011	Add ingointegration#GetVisualSelection(). 
 "	003	06-Jul-2010	Added ingointegration#DoWhenBufLoaded(). 
 "	002	24-Mar-2010	Added ingointegration#BufferRangeToLineRangeCommand(). 
@@ -158,5 +160,44 @@ function! ingointegration#GetVisualSelection()
     let &clipboard = l:save_clipboard
     return l:selection
 endfunction
+
+
+if exists('*synstack')
+function! ingointegration#IsOnSyntaxItem( pos, syntaxItemPattern )
+    " Taking the example of comments: 
+    " Other syntax groups (e.g. Todo) may be embedded in comments. We must thus
+    " check whole stack of syntax items at the cursor position for comments. 
+    " Comments are detected via the translated, effective syntax name. (E.g. in
+    " Vimscript, 'vimLineComment' is linked to 'Comment'.) 
+    for l:id in synstack(a:pos[1], a:pos[2])
+	let l:actualSyntaxItemName = synIDattr(l:id, 'name')
+	let l:effectiveSyntaxItemName = synIDattr(synIDtrans(l:id), 'name')
+"****D echomsg '****' l:actualSyntaxItemName . '->' . l:effectiveSyntaxItemName
+	if l:actualSyntaxItemName =~# a:syntaxItemPattern || l:effectiveSyntaxItemName =~# a:syntaxItemPattern
+	    return 1
+	endif
+    endfor
+    return 0
+endfunction
+else
+function! ingointegration#IsOnSyntaxItem( pos, syntaxItemPattern )
+    " Taking the example of comments: 
+    " Other syntax groups (e.g. Todo) may be embedded in comments. As the
+    " synstack() function is not available, we can only try to get the actual
+    " syntax ID and the one of the syntax item that determines the effective
+    " color. 
+    " Comments are detected via the translated, effective syntax name. (E.g. in
+    " Vimscript, 'vimLineComment' is linked to 'Comment'.) 
+    for l:id in [synID(a:pos[1], a:pos[2], 0), synID(a:pos[1], a:pos[2], 1)]
+	let l:actualSyntaxItemName = synIDattr(l:id, 'name')
+	let l:effectiveSyntaxItemName = synIDattr(synIDtrans(l:id), 'name')
+"****D echomsg '****' l:actualSyntaxItemName . '->' . l:effectiveSyntaxItemName
+	if l:actualSyntaxItemName =~# a:syntaxItemPattern || l:effectiveSyntaxItemName =~# a:syntaxItemPattern
+	    return 1
+	endif
+    endfor
+    return 0
+endfunction
+endif
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
