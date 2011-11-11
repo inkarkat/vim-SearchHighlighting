@@ -43,18 +43,18 @@
 "
 "   If you want the new non-jumping behavior, but map it to different keys:
 "	let g:SearchHighlighting_ExtendStandardCommands = 1
-"	nmap <silent> <Leader>*  <Plug>SearchHighlightingStar
-"	nmap <silent> <Leader>g* <Plug>SearchHighlightingGStar
-"	vmap <silent> <Leader>*  <Plug>SearchHighlightingStar
+"	nmap <Leader>*  <Plug>SearchHighlightingStar
+"	nmap <Leader>g* <Plug>SearchHighlightingGStar
+"	vmap <Leader>*  <Plug>SearchHighlightingStar
 "
 "   If you want a mapping to turn off hlsearch, use this:
-"	nmap <silent> <A-/> <Plug>SearchHighlightingNohlsearch
-"	vmap <silent> <A-/> <Plug>SearchHighlightingNohlsearch
+"	nmap <A-/> <Plug>SearchHighlightingNohlsearch
+"	vmap <A-/> <Plug>SearchHighlightingNohlsearch
 "
 "   To toggle hlsearch (temporarily, so that a new search or 'n' command will
 "   automatically re-enable it), use: 
-"	nmap <silent> <F12> <Plug>SearchHighlightingToggleHlsearch
-"	vmap <silent> <F12> <Plug>SearchHighlightingToggleHlsearch
+"	nmap <F12> <Plug>SearchHighlightingToggleHlsearch
+"	vmap <F12> <Plug>SearchHighlightingToggleHlsearch
 "
 " LIMITATIONS:
 " ASSUMPTIONS:
@@ -71,6 +71,8 @@
 "   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	019	30-Sep-2011	Use <silent> for <Plug> mapping instead of
+"				default mapping. 
 "	018	12-Sep-2011	Use ingointegration#GetVisualSelection() instead
 "				of inline capture. 
 "				Visual * and # mappings with jumping behavior
@@ -175,8 +177,8 @@ endif
 "- Toggle hlsearch ------------------------------------------------------------
 " If you map to this instead of defining a separate :nohlsearch mapping, the
 " hlsearch state will be tracked more accurately. 
-nnoremap <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<Bar>echo ':nohlsearch'<CR>
-vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<CR>gv
+nnoremap <silent> <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<Bar>echo ':nohlsearch'<CR>
+vnoremap <silent> <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<CR>gv
 
 " Toggle hlsearch. This differs from ':set invhlsearch' in that it only
 " temporarily clears the highlighting; a new search or 'n' command will
@@ -185,8 +187,8 @@ vnoremap <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#Search
 " want the toggle mapping to first always clear the highlighting (as this is the
 " most common operation). Only if the mapping is invoked again at the same
 " place, hlsearch will be turned on again. 
-nnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-vnoremap <script> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar>else<Bar>nohlsearch<Bar>endif<CR>gv
+nnoremap <script> <silent> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+vnoremap <script> <silent> <Plug>SearchHighlightingToggleHlsearch :<C-U>if SearchHighlighting#ToggleHlsearch()<Bar>set hlsearch<Bar>else<Bar>nohlsearch<Bar>endif<CR>gv
 
 
 
@@ -198,22 +200,22 @@ if g:SearchHighlighting_NoJump
     " [count]'th occurence. 
     " <cword> selects the (key)word under or after the cursor, just like the star command. 
     " If highlighting is turned on, the search pattern is echoed, just like the star command does. 
-    nnoremap <script> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-    nnoremap <script> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*',expand('<cword>'),1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*',expand('<cword>'),0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match. 
     " gV avoids automatic re-selection of the Visual area in select mode. 
-    vnoremap <script> <Plug>SearchHighlightingStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('gv*', ingointegration#GetVisualSelection(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('gv*', ingointegration#GetVisualSelection(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
-	nmap <silent> * <Plug>SearchHighlightingStar
+	nmap * <Plug>SearchHighlightingStar
     endif
     if ! hasmapto('<Plug>SearchHighlightingGStar', 'n')
-	nmap <silent> g* <Plug>SearchHighlightingGStar
+	nmap g* <Plug>SearchHighlightingGStar
     endif
     if ! hasmapto('<Plug>SearchHighlightingStar', 'x')
-	xmap <silent> * <Plug>SearchHighlightingStar
+	xmap * <Plug>SearchHighlightingStar
     endif
 endif
 if g:SearchHighlighting_ExtendStandardCommands
@@ -228,24 +230,24 @@ if g:SearchHighlighting_ExtendStandardCommands
     nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGStar g*:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternForward<CR>
     nnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash   #:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
     nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGHash g#:call SearchHighlighting#AutoSearchOff()<Bar><SID>EchoSearchPatternBackward<CR>
-    nmap <silent>  * <Plug>SearchHighlightingExtendedStar
-    nmap <silent> g* <Plug>SearchHighlightingExtendedGStar
-    nmap <silent>  # <Plug>SearchHighlightingExtendedHash
-    nmap <silent> g# <Plug>SearchHighlightingExtendedGHash
+    nmap * <Plug>SearchHighlightingExtendedStar
+    nmap g* <Plug>SearchHighlightingExtendedGStar
+    nmap # <Plug>SearchHighlightingExtendedHash
+    nmap g# <Plug>SearchHighlightingExtendedGHash
 
     " Search for selected text in visual mode. 
     nnoremap <expr> <SID>(SearchForwardWithCount)  (v:count ? v:count : '') . '/'
     nnoremap <expr> <SID>(SearchBackwardWithCount) (v:count ? v:count : '') . '?'
     vnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchForwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '/')<CR><CR>:<SID>EchoSearchPatternForward<CR>gV
     vnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchBackwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '?')<CR><CR>:<SID>EchoSearchPatternBackward<CR>gV
-    xmap <silent> * <Plug>SearchHighlightingExtendedStar
-    xmap <silent> # <Plug>SearchHighlightingExtendedHash
+    xmap * <Plug>SearchHighlightingExtendedStar
+    xmap # <Plug>SearchHighlightingExtendedHash
 endif
 
 
 
 "- mappings Autosearch --------------------------------------------------------
-nnoremap <Plug>SearchHighlightingAutoSearch :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+nnoremap <silent> <Plug>SearchHighlightingAutoSearch :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
     nmap <silent> <Leader>* :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 endif
