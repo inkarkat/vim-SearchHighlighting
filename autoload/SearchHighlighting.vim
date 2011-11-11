@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - ingosearch.vim autoload script. 
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2009-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	14-Jan-2011	FIX: Auto-search could clobber the blockwise
+"				yank mode of the unnamed register. 
 "	003	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
 "				separate ingosearch.vim utility module and
 "				renamed to
@@ -172,18 +174,23 @@ endfunction
 "- Autosearch -----------------------------------------------------------------
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
-	let l:save_unnamedregister = @@
-
 	let l:captureTextCommands = 'ygv'
 	if stridx("sS\<C-S>", mode()) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
 	    " to visual mode, then back to select mode. 
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
 	endif
+
+	let l:save_clipboard = &clipboard
+	set clipboard= " Avoid clobbering the selection and clipboard registers. 
+	let l:save_reg = getreg('"')
+	let l:save_regmode = getregtype('"')
+
 	execute 'normal!' l:captureTextCommands
 	let @/ = ingosearch#LiteralTextToSearchPattern(@@, 0, '/')
 
-	let @@ = l:save_unnamedregister
+	call setreg('"', l:save_reg, l:save_regmode)
+	let &clipboard = l:save_clipboard
     else
 	let @/ = ingosearch#LiteralTextToSearchPattern(expand('<cword>'), 1, '/')
     endif
