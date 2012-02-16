@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingosearch.vim autoload script. 
 "
-" Copyright: (C) 2009-2011 by Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -172,8 +172,11 @@ endfunction
 
 
 "- Autosearch -----------------------------------------------------------------
+let s:AutoSearchWhat = 'cword'
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
+	" In visual and select mode, search for the selected text. 
+
 	let l:captureTextCommands = 'ygv'
 	if stridx("sS\<C-S>", mode()) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
@@ -192,7 +195,20 @@ function! s:AutoSearch()
 	call setreg('"', l:save_reg, l:save_regmode)
 	let &clipboard = l:save_clipboard
     else
-	let @/ = ingosearch#LiteralTextToSearchPattern(expand('<cword>'), 1, '/')
+	" Search for the configured entity. 
+	if s:AutoSearchWhat ==# 'line'
+	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
+	    if ! empty(l:lineText)
+		let @/ = '^\s*' . ingosearch#LiteralTextToSearchPattern(l:lineText, 0, '/') . '\s*$'
+	    endif
+	elseif s:AutoSearchWhat ==# 'exactline'
+	    let l:lineText = getline('.')
+	    if ! empty(l:lineText)
+		let @/ = '^' . ingosearch#LiteralTextToSearchPattern(l:lineText, 0, '/') . '$'
+	    endif
+	else
+	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<'. s:AutoSearchWhat . '>'), 1, '/')
+	endif
     endif
 endfunction
 
@@ -214,6 +230,9 @@ function! SearchHighlighting#AutoSearchOff()
 	autocmd!
     augroup END
 
+    " Restore the last used search pattern. 
+    let @/ = histget('search', -1)
+
     " If auto-search was turned off by the star command, inform the star command
     " that it must have turned the highlighting on, not off. (This improves the
     " accuracy of the s:isSearchOn workaround.)
@@ -223,13 +242,20 @@ endfunction
 function! SearchHighlighting#ToggleAutoSearch()
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call SearchHighlighting#AutoSearchOff()
-	echomsg "Disabled auto-search highlighting"
+	echomsg 'Disabled auto-search highlighting'
 	return 0
     else
 	call SearchHighlighting#AutoSearchOn()
-	echomsg "Enabled auto-search highlighting"
+	echomsg 'Enabled auto-search highlighting of' s:AutoSearchWhat
 	return 1
     endif
+endfunction
+
+function! SearchHighlighting#SetAutoSearch( what )
+    let s:AutoSearchWhat = a:what
+endfunction
+function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
+    return filter(['cword', 'cWORD', 'exactline', 'line'], 'v:val =~# (empty(a:ArgLead) ? ".*" : a:ArgLead)')
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
