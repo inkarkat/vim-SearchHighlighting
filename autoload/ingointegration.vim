@@ -2,12 +2,17 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010-2011 by Ingo Karkat
+" Copyright: (C) 2010-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	12-Dec-2011	Assume mutating a:rangeCommand in
+"				ingointegration#OperatorMappingForRangeCommand()
+"				and handle 'readonly' and 'nomodifiable' buffers
+"				without function errors. Implementation copied
+"				from autoload/ReplaceWithRegister.vim. 
 "	005	22-Sep-2011	Include ingointegration#IsOnSyntaxItem() from
 "				SearchInSyntax.vim to allow reuse. 
 "	004	12-Sep-2011	Add ingointegration#GetVisualSelection(). 
@@ -16,6 +21,21 @@
 "	001	19-Mar-2010	file creation
 
 function! s:OpfuncExpression( opfunc )
+    let &opfunc = a:opfunc
+
+    let l:keys = 'g@'
+
+    if ! &l:modifiable || &l:readonly
+	" Probe for "Cannot make changes" error and readonly warning via a no-op
+	" dummy modification. 
+	" In the case of a nomodifiable buffer, Vim will abort the normal mode
+	" command chain, discard the g@, and thus not invoke the operatorfunc. 
+	let l:keys = ":call setline(1, getline(1))\<CR>" . l:keys
+    endif
+
+    return l:keys
+endfunction
+function! ingointegration#OperatorMappingForRangeCommand( mapArgs, mapKeys, rangeCommand )
 "******************************************************************************
 "* PURPOSE:
 "   Define a custom operator mapping "\xx{motion}" (where \xx is a:mapKeys) that
@@ -23,7 +43,9 @@ function! s:OpfuncExpression( opfunc )
 "   |.|. 
 "
 "* ASSUMPTIONS / PRECONDITIONS:
-"   None. 
+"   Checks for a 'nomodifiable' or 'readonly' buffer and forces the proper Vim
+"   error / warning, so it assumes that a:rangeCommand mutates the buffer. 
+"
 "* EFFECTS / POSTCONDITIONS:
 "   Defines a normal mode mapping for a:mapKeys. 
 "* INPUTS:
@@ -35,10 +57,6 @@ function! s:OpfuncExpression( opfunc )
 "* RETURN VALUES: 
 "   None. 
 "******************************************************************************
-    let &opfunc = a:opfunc
-    return 'g@'
-endfunction
-function! ingointegration#OperatorMappingForRangeCommand( mapArgs, mapKeys, rangeCommand )
     let l:rangeCommandOperator = a:rangeCommand . 'Operator'
     execute printf("
     \	function! s:%s( type )\n
