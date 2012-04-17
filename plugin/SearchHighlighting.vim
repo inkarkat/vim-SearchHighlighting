@@ -1,34 +1,5 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-search. 
 "
-" DESCRIPTION:
-" Changes the "star" command '*', so that it doesn't jump to the next match. 
-" (Unless you supply a [count], so '1*' now restores the old '*' behavior.)
-" If you issue a star command on the same text as before, the search
-" highlighting is turned off (via :nohlsearch); the search pattern remains set,
-" so a 'n' / 'N' command will turn highlighting on again. With this, you can
-" easily toggle highlighting for the current word / visual selection. 
-"
-" With the disabling of the jump to the next match, there is no difference
-" between * and # any more, so the # key can now be used for some other mapping. 
-"
-" The auto-search functionality instantly highlights the word under the cursor
-" when typing or moving around. This can be helpful while browsing source code;
-" whenever you position the cursor on an identifier, all other occurrences are
-" instantly highlighted. This functionality is toggled on/off via <Leader>*. You
-" can also :nohlsearch to temporarily disable the highlighting. 
-"
-" USAGE:
-"   *		Toggle search highlighting for the current whole \<word\> on/off. 
-"   g*	    	Toggle search highlighting for the current word on/off. 
-"   {Visual}*  	Toggle search highlighting for the selection on/off. 
-"
-"   [count]*,	Search forward for the [count]'th occurrence of the word nearest
-"   [count]g*	to the cursor.
-"   {Visual}[count]*
-"
-"   <Leader>*   Toggle auto-search highlighting. 
-"
-" INSTALLATION:
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
 "   - ingointegration.vim autoload script. 
@@ -37,40 +8,18 @@
 "   - EchoWithoutScrolling.vim (optional). 
 "
 " CONFIGURATION:
-"   If you do not want the new non-jumping behavior of the star commands at all: 
-"	let g:SearchHighlighting_NoJump = 0
-"	let g:SearchHighlighting_ExtendStandardCommands = 1
 "
-"   If you want the new non-jumping behavior, but map it to different keys:
-"	let g:SearchHighlighting_ExtendStandardCommands = 1
-"	nmap <Leader>*  <Plug>SearchHighlightingStar
-"	nmap <Leader>g* <Plug>SearchHighlightingGStar
-"	vmap <Leader>*  <Plug>SearchHighlightingStar
-"
-"   If you want a mapping to turn off hlsearch, use this:
-"	nmap <A-/> <Plug>SearchHighlightingNohlsearch
-"	vmap <A-/> <Plug>SearchHighlightingNohlsearch
-"
-"   To toggle hlsearch (temporarily, so that a new search or 'n' command will
-"   automatically re-enable it), use: 
-"	nmap <F12> <Plug>SearchHighlightingToggleHlsearch
-"	vmap <F12> <Plug>SearchHighlightingToggleHlsearch
-"
-" LIMITATIONS:
-" ASSUMPTIONS:
-" KNOWN PROBLEMS:
-" TODO:
-"
-" Copyright: (C) 2008-2011 by Ingo Karkat
+" Copyright: (C) 2008-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-" History:
-"   I came up with this on my own; however, the idea can be traced back to
-"   francoissteinmetz@yahoo.fr and da.thompson@yahoo.com in vimtip #1:
-"   map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 "
 " REVISION	DATE		REMARKS 
+"	020	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
+"				commands. 
+"				ENH: Extend Autosearch to highlight other
+"				occurrences of the line, cWORD, etc. 
+"				Split off documentation into help file. 
 "	019	30-Sep-2011	Use <silent> for <Plug> mapping instead of
 "				default mapping. 
 "	018	12-Sep-2011	Use ingointegration#GetVisualSelection() instead
@@ -151,6 +100,7 @@ endif
 let g:loaded_SearchHighlighting = 1
 
 "- configuration --------------------------------------------------------------
+
 if ! exists('g:SearchHighlighting_NoJump')
     let g:SearchHighlighting_NoJump = 1
 endif
@@ -161,6 +111,7 @@ endif
 
 
 "- integration ----------------------------------------------------------------
+
 " Use EchoWithoutScrolling#Echo to emulate the built-in truncation of the search
 " pattern (via ':set shortmess+=T'). 
 silent! call EchoWithoutScrolling#MaxLength()	" Execute a function to force autoload. 
@@ -175,6 +126,7 @@ endif
 
 
 "- Toggle hlsearch ------------------------------------------------------------
+
 " If you map to this instead of defining a separate :nohlsearch mapping, the
 " hlsearch state will be tracked more accurately. 
 nnoremap <silent> <Plug>SearchHighlightingNohlsearch :<C-U>call SearchHighlighting#SearchOff()<Bar>nohlsearch<Bar>echo ':nohlsearch'<CR>
@@ -193,6 +145,7 @@ vnoremap <script> <silent> <Plug>SearchHighlightingToggleHlsearch :<C-U>if Searc
 
 
 "- mappings Search Highlighting -----------------------------------------------
+
 if g:SearchHighlighting_NoJump
     " Highlight current word as search pattern, but do not jump to next match. 
     "
@@ -247,9 +200,15 @@ endif
 
 
 "- mappings Autosearch --------------------------------------------------------
+
 nnoremap <silent> <Plug>SearchHighlightingAutoSearch :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
     nmap <silent> <Leader>* :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 endif
+
+"- commands Autosearch ---------------------------------------------------------
+
+command! -bar -nargs=1 -complete=customlist,SearchHighlighting#AutoSearchComplete AutoSearch call SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif 
+command! -bar NoAutoSearch call SearchHighlighting#AutoSearchOff() | nohlsearch
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
