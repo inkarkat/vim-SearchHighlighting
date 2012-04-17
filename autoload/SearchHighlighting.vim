@@ -9,6 +9,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
+"				commands. 
+"				ENH: Extend Autosearch to highlight other
+"				occurrences of the line, cWORD, etc. 
+"				Restore the last used search pattern when
+"				Autosearch is turned off. 
+"				Use SearchHighlighting#AutoSearchOff() instead
+"				of modifying s:isSearchOn directly. 
 "	004	14-Jan-2011	FIX: Auto-search could clobber the blockwise
 "				yank mode of the unnamed register. 
 "	003	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
@@ -172,7 +180,11 @@ endfunction
 
 
 "- Autosearch -----------------------------------------------------------------
-let s:AutoSearchWhat = 'cword'
+let s:AutoSearchWhat = 'wword'
+let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line']
+function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
+    return filter(copy(s:AutoSearchWhatValues), 'v:val =~# (empty(a:ArgLead) ? ".*" : a:ArgLead)')
+endfunction
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
 	" In visual and select mode, search for the selected text. 
@@ -206,8 +218,17 @@ function! s:AutoSearch()
 	    if ! empty(l:lineText)
 		let @/ = '^' . ingosearch#LiteralTextToSearchPattern(l:lineText, 0, '/') . '$'
 	    endif
+	elseif s:AutoSearchWhat ==# 'wword'
+	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<cword>'), 1, '/')
+	elseif s:AutoSearchWhat ==# 'wWORD'
+	    let @/ = '\%(^\|\s\)\zs' . ingosearch#LiteralTextToSearchPattern(expand('<cWORD>'), 0, '/') . '\ze\%(\s\|$\)'
+	elseif s:AutoSearchWhat ==? 'cword'
+	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<'. s:AutoSearchWhat . '>'), 0, '/')
 	else
-	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<'. s:AutoSearchWhat . '>'), 1, '/')
+	    let v:errmsg = 'Unknown search entity "' . s:AutoSearchWhat . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', ')
+	    echohl ErrorMsg
+	    echomsg v:errmsg
+	    echohl None
 	endif
     endif
 endfunction
@@ -224,7 +245,7 @@ endfunction
 function! SearchHighlighting#AutoSearchOff()
     if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	" Short-circuit optimization. 
-	return
+	return 0
     endif
     augroup SearchHighlightingAutoSearch
 	autocmd!
@@ -236,7 +257,9 @@ function! SearchHighlighting#AutoSearchOff()
     " If auto-search was turned off by the star command, inform the star command
     " that it must have turned the highlighting on, not off. (This improves the
     " accuracy of the s:isSearchOn workaround.)
-    let s:isSearchOn = 0
+    call SearchHighlighting#SearchOff()
+
+    return 1
 endfunction
 
 function! SearchHighlighting#ToggleAutoSearch()
@@ -253,9 +276,6 @@ endfunction
 
 function! SearchHighlighting#SetAutoSearch( what )
     let s:AutoSearchWhat = a:what
-endfunction
-function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
-    return filter(['cword', 'cWORD', 'exactline', 'line'], 'v:val =~# (empty(a:ArgLead) ? ".*" : a:ArgLead)')
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
