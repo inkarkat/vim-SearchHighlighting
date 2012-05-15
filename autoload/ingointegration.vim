@@ -2,12 +2,14 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010-2011 Ingo Karkat
+" Copyright: (C) 2010-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	007     06-Mar-2012     Add ingointegration#IsFiletype() from
+"				insertsignature.vim. 
 "	006	12-Dec-2011	Assume mutating a:rangeCommand in
 "				ingointegration#OperatorMappingForRangeCommand()
 "				and handle 'readonly' and 'nomodifiable' buffers
@@ -217,5 +219,18 @@ function! ingointegration#IsOnSyntaxItem( pos, syntaxItemPattern )
     return 0
 endfunction
 endif
+
+
+function! ingointegration#IsFiletype( filetypes )
+    let l:filetypes = (type(a:filetypes) == type([]) ? a:filetypes : [a:filetypes])
+
+    for l:ft in split(&filetype, '\.')
+	if (index(l:filetypes, l:ft) != -1)
+	    return 1
+	endif
+    endfor
+
+    return 0
+endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
