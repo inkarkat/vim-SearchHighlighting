@@ -8,6 +8,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	009	14-Jun-2012	Add ingointegration#GetRange().
 "	008	16-May-2012	Add ingointegration#GetCurrentRegexpSelection()
 "				and ingointegration#SelectCurrentRegexp().
 "	007     06-Mar-2012     Add ingointegration#IsFiletype() from
@@ -181,6 +182,30 @@ function! ingointegration#GetVisualSelection()
     call setreg('"', l:save_reg, l:save_regmode)
     let &clipboard = l:save_clipboard
     return l:selection
+endfunction
+function! ingointegration#GetRange( range )
+"******************************************************************************
+"* PURPOSE:
+"   Retrieve the contents of the passed range without clobbering any register.
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None.
+"* EFFECTS / POSTCONDITIONS:
+"   None.
+"* INPUTS:
+"   a:range A valid |:range|; when empty, the current line is used.
+"* RETURN VALUES:
+"   Text of the range on lines. Each line ends with a newline character.
+"******************************************************************************
+    let l:save_clipboard = &clipboard
+    set clipboard= " Avoid clobbering the selection and clipboard registers.
+    let l:save_reg = getreg('"')
+    let l:save_regmode = getregtype('"')
+	silent execute a:range . 'yank'
+	let l:contents = @"
+    call setreg('"', l:save_reg, l:save_regmode)
+    let &clipboard = l:save_clipboard
+
+    return l:contents
 endfunction
 
 
