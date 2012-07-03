@@ -1,39 +1,41 @@
-" SearchHighlighting.vim: Highlighting of searches via star, auto-search. 
+" SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
-"   - ingosearch.vim autoload script. 
+"   - ingosearch.vim autoload script.
 "
 " Copyright: (C) 2009-2012 Ingo Karkat
-"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
-" REVISION	DATE		REMARKS 
+" REVISION	DATE		REMARKS
+"	006	18-Apr-2012	Make the {what} argument to
+"				:SearchAutoHighlighting optional.
 "	005	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
-"				commands. 
+"				commands.
 "				ENH: Extend Autosearch to highlight other
-"				occurrences of the line, cWORD, etc. 
+"				occurrences of the line, cWORD, etc.
 "				Restore the last used search pattern when
-"				Autosearch is turned off. 
+"				Autosearch is turned off.
 "				Use SearchHighlighting#AutoSearchOff() instead
-"				of modifying s:isSearchOn directly. 
+"				of modifying s:isSearchOn directly.
 "	004	14-Jan-2011	FIX: Auto-search could clobber the blockwise
-"				yank mode of the unnamed register. 
+"				yank mode of the unnamed register.
 "	003	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
 "				separate ingosearch.vim utility module and
 "				renamed to
-"				ingosearch#LiteralTextToSearchPattern(). 
+"				ingosearch#LiteralTextToSearchPattern().
 "	002	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
 "				flag with s:isSearchOn and
 "				SearchHighlighting#SearchOn(),
 "				SearchHighlighting#SearchOff() and
-"				SearchHighlighting#IsSearch() functions. 
+"				SearchHighlighting#IsSearch() functions.
 "				The toggle algorithm now only assumes that the hlsearch
 "				state is "on" if the state was not explicitly
 "				turned on. This allows third parties to :call
 "				SearchHighlighting#SearchOff() and have the next
 "				toggle command correctly turn highlighting back
-"				on. 
+"				on.
 "	001	30-May-2009	Moved functions from plugin to separate autoload
 "				script.
 "				file creation
@@ -48,14 +50,14 @@
 " 'n' / 'N'. In these cases, the user would need to invoke the mapping a second
 " time to get the desired result. Other mappings or scripts that change the
 " hlsearch state can update the flag by calling SearchHighlighting#SearchOn() /
-" SearchHighlighting#SearchOff(). 
+" SearchHighlighting#SearchOff().
 let s:isSearchOn = 0
 
 
 " The last toggle position is initialized with an invalid position. It will be
 " set on every toggle, and is invalidated when the search highlighting is
-" explicitly set via SearchHighlighting#SearchOn() / 
-" SearchHighlighting#SearchOff. 
+" explicitly set via SearchHighlighting#SearchOn() /
+" SearchHighlighting#SearchOff.
 let s:lastToggleHlsearchPos = []
 function! SearchHighlighting#SearchOff()
     let s:isSearchOn = 0
@@ -71,11 +73,11 @@ endfunction
 
 " The toggle algorithm assumes that the hlsearch state is "on" unless the state
 " was explicitly turned on, or a preceding toggle to "off" happened at the
-" current cursor position. 
+" current cursor position.
 " With this, the built-in search commands ('/', '?', '*', '#', 'n', 'N') can
 " turn on hlsearch without informing us (as long as the jump does not position
 " the cursor to the position where the last toggle "off" was done; in this case,
-" the algorithm will be wrong and the toggle must be repeated). 
+" the algorithm will be wrong and the toggle must be repeated).
 function! SearchHighlighting#ToggleHlsearch()
     let l:currentPos = [ tabpagenr(), winnr(), getpos('.') ]
 
@@ -84,11 +86,11 @@ function! SearchHighlighting#ToggleHlsearch()
 	let s:isSearchOn = 0
 	echo 'hlsearch turned off'
     elseif ! s:isSearchOn && (l:isExplicitSetting || (! l:isExplicitSetting && l:currentPos == s:lastToggleHlsearchPos))
-	" Setting this from within a function has no effect. 
+	" Setting this from within a function has no effect.
 	"set hlsearch
 	let s:isSearchOn = 1
     else
-	" Setting this from within a function has no effect. 
+	" Setting this from within a function has no effect.
 	"nohlsearch
 	let s:isSearchOn = 0
 	echo ':nohlsearch'
@@ -106,9 +108,9 @@ function! s:ToggleHighlighting( text, isWholeWordSearch )
 
     if @/ == l:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
-	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch. 
+	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch.
 	"let @/ = ''
-	
+
 	let s:isSearchOn = 0
 	return 0
     endif
@@ -116,14 +118,14 @@ function! s:ToggleHighlighting( text, isWholeWordSearch )
     let @/ = l:searchPattern
     let s:isSearchOn = 1
 
-    " The search pattern is added to the search history, as '/' or '*' would do. 
+    " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
 
     " To enable highlighting of the search pattern (in case it was temporarily
     " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set. 
+    " globally set.
     " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping! 
+    " the mapping!
     "if &hlsearch
     "    set hlsearch
     "endif
@@ -133,15 +135,15 @@ endfunction
 
 function! s:DefaultCountStar( starCommand )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
-    " mapping or :normal this must be done explicitly via 'zv'. 
+    " mapping or :normal this must be done explicitly via 'zv'.
     execute 'normal!' a:starCommand . 'zv'
 
     " Note: Without this self-assignment, the former search pattern is
-    " highlighted! 
+    " highlighted!
     let @/ = @/
 
     let s:isSearchOn = 1
-    " With a count, search is always on; toggling is only done without a count. 
+    " With a count, search is always on; toggling is only done without a count.
     return 1
 endfunction
 
@@ -151,11 +153,11 @@ function! s:VisualCountStar( count, starCommand, text )
     let @/ = l:searchPattern
     let s:isSearchOn = 1
 
-    " The search pattern is added to the search history, as '/' or '*' would do. 
+    " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
 
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
-    " mapping or :normal this must be done explicitly via 'zv'. 
+    " mapping or :normal this must be done explicitly via 'zv'.
     execute 'normal!' a:count . 'nzv'
     return 1
 endfunction
@@ -187,17 +189,17 @@ function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
 endfunction
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
-	" In visual and select mode, search for the selected text. 
+	" In visual and select mode, search for the selected text.
 
 	let l:captureTextCommands = 'ygv'
 	if stridx("sS\<C-S>", mode()) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
-	    " to visual mode, then back to select mode. 
+	    " to visual mode, then back to select mode.
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
 	endif
 
 	let l:save_clipboard = &clipboard
-	set clipboard= " Avoid clobbering the selection and clipboard registers. 
+	set clipboard= " Avoid clobbering the selection and clipboard registers.
 	let l:save_reg = getreg('"')
 	let l:save_regmode = getregtype('"')
 
@@ -207,7 +209,7 @@ function! s:AutoSearch()
 	call setreg('"', l:save_reg, l:save_regmode)
 	let &clipboard = l:save_clipboard
     else
-	" Search for the configured entity. 
+	" Search for the configured entity.
 	if s:AutoSearchWhat ==# 'line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
 	    if ! empty(l:lineText)
@@ -244,14 +246,14 @@ endfunction
 
 function! SearchHighlighting#AutoSearchOff()
     if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	" Short-circuit optimization. 
+	" Short-circuit optimization.
 	return 0
     endif
     augroup SearchHighlightingAutoSearch
 	autocmd!
     augroup END
 
-    " Restore the last used search pattern. 
+    " Restore the last used search pattern.
     let @/ = histget('search', -1)
 
     " If auto-search was turned off by the star command, inform the star command
@@ -265,17 +267,19 @@ endfunction
 function! SearchHighlighting#ToggleAutoSearch()
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call SearchHighlighting#AutoSearchOff()
-	echomsg 'Disabled auto-search highlighting'
+	echomsg 'Disabled search auto-highlighting'
 	return 0
     else
 	call SearchHighlighting#AutoSearchOn()
-	echomsg 'Enabled auto-search highlighting of' s:AutoSearchWhat
+	echomsg 'Enabled search auto-highlighting of' s:AutoSearchWhat
 	return 1
     endif
 endfunction
 
-function! SearchHighlighting#SetAutoSearch( what )
-    let s:AutoSearchWhat = a:what
+function! SearchHighlighting#SetAutoSearch( ... )
+    if a:0
+	let s:AutoSearchWhat = a:1
+    endif
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
