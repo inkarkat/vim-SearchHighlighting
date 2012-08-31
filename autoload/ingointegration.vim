@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	010	20-Jun-2012	BUG: ingointegration#GetRange() can throw E486;
+"				add try...finally and document this.
 "	009	14-Jun-2012	Add ingointegration#GetRange().
 "	008	16-May-2012	Add ingointegration#GetCurrentRegexpSelection()
 "				and ingointegration#SelectCurrentRegexp().
@@ -195,15 +197,19 @@ function! ingointegration#GetRange( range )
 "   a:range A valid |:range|; when empty, the current line is used.
 "* RETURN VALUES:
 "   Text of the range on lines. Each line ends with a newline character.
+"   Throws Vim error "E486: Pattern not found" when the range does not match.
 "******************************************************************************
     let l:save_clipboard = &clipboard
     set clipboard= " Avoid clobbering the selection and clipboard registers.
     let l:save_reg = getreg('"')
     let l:save_regmode = getregtype('"')
+    try
 	silent execute a:range . 'yank'
 	let l:contents = @"
-    call setreg('"', l:save_reg, l:save_regmode)
-    let &clipboard = l:save_clipboard
+    finally
+	call setreg('"', l:save_reg, l:save_regmode)
+	let &clipboard = l:save_clipboard
+    endtry
 
     return l:contents
 endfunction
