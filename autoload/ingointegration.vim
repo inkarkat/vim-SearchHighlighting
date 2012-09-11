@@ -8,6 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	011	01-Sep-2012	Duplicate CompleteHelper#ExtractText() here as
+"				ingointegration#GetText() to avoid that
+"				unrelated plugins have a dependency to that
+"				library.
 "	010	20-Jun-2012	BUG: ingointegration#GetRange() can throw E486;
 "				add try...finally and document this.
 "	009	14-Jun-2012	Add ingointegration#GetRange().
@@ -212,6 +216,40 @@ function! ingointegration#GetRange( range )
     endtry
 
     return l:contents
+endfunction
+function! ingointegration#GetText( startPos, endPos )
+"*******************************************************************************
+"* PURPOSE:
+"   Extract the text between a:startPos and a:endPos from the current buffer.
+"   Multiple lines will be delimited by a newline character.
+"* ASSUMPTIONS / PRECONDITIONS:
+"   none
+"* EFFECTS / POSTCONDITIONS:
+"   none
+"* INPUTS:
+"   a:startPos	    [line,col]
+"   a:endPos	    [line,col]
+"* RETURN VALUES:
+"   string text
+"*******************************************************************************
+    let [l:line, l:column] = a:startPos
+    let [l:endLine, l:endColumn] = a:endPos
+    if l:line > l:endLine || (l:line == l:endLine && l:column > l:endColumn)
+	return ''
+    endif
+
+    let l:text = ''
+    while 1
+	if l:line == l:endLine
+	    let l:text .= matchstr(getline(l:line) . "\n", '\%' . l:column . 'c' . '.*\%' . (l:endColumn + 1) . 'c')
+	    break
+	else
+	    let l:text .= matchstr(getline(l:line) . "\n", '\%' . l:column . 'c' . '.*')
+	    let l:line += 1
+	    let l:column = 1
+	endif
+    endwhile
+    return l:text
 endfunction
 
 
