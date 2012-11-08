@@ -40,6 +40,9 @@ I came up with this on my own; however, the idea can be traced back to
 francoissteinmetz@yahoo.fr and da.thompson@yahoo.com in vimtip #1: >
     map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 <
+- highlight_word_under_cursor.vim (vimscript #4287) implements the search
+  auto-highlighting of the whole and optionally current word.
+
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
 
@@ -75,10 +78,10 @@ g*			Toggle search highlighting for the current word
 INSTALLATION				      *SearchHighlighting-installation*
 
 This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the |:UseVimball| command. >
-    vim SearchHighlighting.vba.gz
+    vim SearchHighlighting*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
