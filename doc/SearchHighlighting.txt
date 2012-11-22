@@ -42,6 +42,8 @@ francoissteinmetz@yahoo.fr and da.thompson@yahoo.com in vimtip #1: >
 <
 - highlight_word_under_cursor.vim (vimscript #4287) implements the search
   auto-highlighting of the whole and optionally current word.
+- HiCursorWords (vimscript #4306) highlights the word under the cursor, with
+  optional delay and limited to certain syntax groups.
 
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
