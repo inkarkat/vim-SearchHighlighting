@@ -1,4 +1,4 @@
-" SearchHighlighting.vim: Highlighting of searches via star, auto-search.
+" SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
@@ -18,6 +18,8 @@
 "	021	18-Apr-2012	Rename :AutoSearch to :SearchAutoHighlighting,
 "				because I couldn't remember the command name and
 "				always tried completing :Search.
+"				Make the {what} argument to
+"				:SearchAutoHighlighting optional.
 "	020	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
 "				commands.
 "				ENH: Extend Autosearch to highlight other
@@ -211,7 +213,7 @@ endif
 
 "- commands Auto Search Highlighting ------------------------------------------
 
-command! -bar -nargs=1 -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting call SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting call SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif
 command! -bar NoSearchAutoHighlighting call SearchHighlighting#AutoSearchOff() | nohlsearch
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
