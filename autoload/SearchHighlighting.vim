@@ -9,6 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	007	04-Jul-2012	Minor: Tweak command completion.
 "	006	18-Apr-2012	Make the {what} argument to
 "				:SearchAutoHighlighting optional.
 "	005	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
@@ -185,7 +186,7 @@ endfunction
 let s:AutoSearchWhat = 'wword'
 let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line']
 function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
-    return filter(copy(s:AutoSearchWhatValues), 'v:val =~# (empty(a:ArgLead) ? ".*" : a:ArgLead)')
+    return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
 endfunction
 function! s:AutoSearch()
     if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
