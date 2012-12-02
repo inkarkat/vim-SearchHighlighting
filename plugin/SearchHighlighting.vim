@@ -2,12 +2,10 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - ingointegration.vim autoload script.
-"   - ingosearch.vim autoload script.
-"   - SearchHighlighting.vim autoload script.
-"   - EchoWithoutScrolling.vim (optional).
-"
-" CONFIGURATION:
+"   - ingointegration.vim autoload script
+"   - ingosearch.vim autoload script
+"   - SearchHighlighting.vim autoload script
+"   - EchoWithoutScrolling.vim (optional)
 "
 " Copyright: (C) 2008-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -15,7 +13,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"	021	18-Apr-2012	Rename :AutoSearch to :SearchAutoHighlighting,
+"   1.00.021	18-Apr-2012	Rename :AutoSearch to :SearchAutoHighlighting,
 "				because I couldn't remember the command name and
 "				always tried completing :Search.
 "				Make the {what} argument to
