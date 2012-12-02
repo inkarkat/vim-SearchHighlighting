@@ -1,7 +1,7 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
-"   - ingosearch.vim autoload script.
+"   - ingosearch.vim autoload script
 "
 " Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -9,7 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"	007	04-Jul-2012	Minor: Tweak command completion.
+"   1.00.007	04-Jul-2012	Minor: Tweak command completion.
 "	006	18-Apr-2012	Make the {what} argument to
 "				:SearchAutoHighlighting optional.
 "	005	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
@@ -42,6 +42,7 @@
 "				file creation
 
 "- Toggle hlsearch ------------------------------------------------------------
+
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
@@ -104,6 +105,7 @@ endfunction
 
 
 "- Search Highlighting --------------------------------------------------------
+
 function! s:ToggleHighlighting( text, isWholeWordSearch )
     let l:searchPattern = ingosearch#LiteralTextToSearchPattern( a:text, a:isWholeWordSearch, '/' )
 
@@ -183,6 +185,7 @@ endfunction
 
 
 "- Autosearch -----------------------------------------------------------------
+
 let s:AutoSearchWhat = 'wword'
 let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line']
 function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
