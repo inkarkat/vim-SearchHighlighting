@@ -259,7 +259,7 @@ function! ingointegration#IsOnSyntaxItem( pos, syntaxItemPattern )
     " Other syntax groups (e.g. Todo) may be embedded in comments. We must thus
     " check whole stack of syntax items at the cursor position for comments.
     " Comments are detected via the translated, effective syntax name. (E.g. in
-    " Vimscript, 'vimLineComment' is linked to 'Comment'.)
+    " Vimscript, "vimLineComment" is linked to "Comment".)
     for l:id in synstack(a:pos[1], a:pos[2])
 	let l:actualSyntaxItemName = synIDattr(l:id, 'name')
 	let l:effectiveSyntaxItemName = synIDattr(synIDtrans(l:id), 'name')
@@ -278,7 +278,7 @@ function! ingointegration#IsOnSyntaxItem( pos, syntaxItemPattern )
     " syntax ID and the one of the syntax item that determines the effective
     " color.
     " Comments are detected via the translated, effective syntax name. (E.g. in
-    " Vimscript, 'vimLineComment' is linked to 'Comment'.)
+    " Vimscript, "vimLineComment" is linked to "Comment".)
     for l:id in [synID(a:pos[1], a:pos[2], 0), synID(a:pos[1], a:pos[2], 1)]
 	let l:actualSyntaxItemName = synIDattr(l:id, 'name')
 	let l:effectiveSyntaxItemName = synIDattr(synIDtrans(l:id), 'name')
