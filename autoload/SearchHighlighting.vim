@@ -9,6 +9,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.01.008	03-Dec-2012	FIX: Prevent repeated error message when
+"				an invalid {what} was given to
+"				:SearchAutoHighlighting.
 "   1.00.007	04-Jul-2012	Minor: Tweak command completion.
 "	006	18-Apr-2012	Make the {what} argument to
 "				:SearchAutoHighlighting optional.
@@ -231,10 +234,7 @@ function! s:AutoSearch()
 	elseif s:AutoSearchWhat ==? 'cword'
 	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<'. s:AutoSearchWhat . '>'), 0, '/')
 	else
-	    let v:errmsg = 'Unknown search entity "' . s:AutoSearchWhat . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', ')
-	    echohl ErrorMsg
-	    echomsg v:errmsg
-	    echohl None
+	    throw 'ASSERT: Unknown search entity ' . string(s:AutoSearchWhat)
 	endif
     endif
 endfunction
@@ -282,8 +282,18 @@ endfunction
 
 function! SearchHighlighting#SetAutoSearch( ... )
     if a:0
+	if index(s:AutoSearchWhatValues, a:1) == -1
+	    let v:errmsg = 'Unknown search entity "' . a:1 . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', ')
+	    echohl ErrorMsg
+	    echomsg v:errmsg
+	    echohl None
+
+	    return 0
+	endif
 	let s:AutoSearchWhat = a:1
     endif
+
+    return 1
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
