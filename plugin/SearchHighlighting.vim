@@ -13,6 +13,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.01.022	03-Dec-2012	FIX: Prevent repeated error message when
+"				an invalid {what} was given to
+"				:SearchAutoHighlighting.
 "   1.00.021	18-Apr-2012	Rename :AutoSearch to :SearchAutoHighlighting,
 "				because I couldn't remember the command name and
 "				always tried completing :Search.
@@ -211,7 +214,7 @@ endif
 
 "- commands Auto Search Highlighting ------------------------------------------
 
-command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting call SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting if SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif | endif
 command! -bar NoSearchAutoHighlighting call SearchHighlighting#AutoSearchOff() | nohlsearch
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
