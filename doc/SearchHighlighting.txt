@@ -136,6 +136,9 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
+1.02	17-Jan-2013
+Do not trigger modeline processing when enabling auto-search highlighting.
+
 1.01	03-Dec-2012
 FIX: Prevent repeated error message when an invalid {what} was given to
 :SearchAutoHighlighting.
@@ -147,7 +150,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2012 Ingo Karkat
+Copyright: (C) 2008-2013 Ingo Karkat
 The VIM LICENSE applies to this script; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
