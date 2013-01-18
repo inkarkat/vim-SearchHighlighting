@@ -156,7 +156,11 @@ function! s:DefaultCountStar( starCommand )
 endfunction
 
 function! s:VisualCountStar( count, starCommand, text )
-    let l:searchPattern = ingosearch#LiteralTextToSearchPattern( a:text, 0, '/' )
+    let l:searchPattern = ingosearch#LiteralTextToSearchPattern(a:text, 0, '/')
+    if visualmode() ==# "\<C-v>"
+	let l:searchPattern = substitute(l:searchPattern, '\\n', '\\ze.*\\n.*', '')
+	let l:searchPattern = substitute(l:searchPattern, '\\n', '.*\\n.*', 'g')
+    endif
 
     let @/ = l:searchPattern
     let s:isSearchOn = 1
@@ -167,23 +171,24 @@ function! s:VisualCountStar( count, starCommand, text )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'.
     execute 'normal!' a:count . 'nzv'
+
     return 1
 endfunction
 
 " This function can also be used in other scripts, to avoid complicated
 " invocations of (and the echoing inside)
 " execute "normal \<Plug>SearchHighlightingStar"
-function! SearchHighlighting#SearchHighlightingNoJump( starCommand, text, isWholeWordSearch )
+function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
     call SearchHighlighting#AutoSearchOff()
 
-    if v:count
+    if a:count
 	if a:starCommand =~# '^gv'
-	    return s:VisualCountStar( v:count, a:starCommand, a:text )
+	    return s:VisualCountStar(a:count, a:starCommand, a:text)
 	else
-	    return s:DefaultCountStar( v:count . a:starCommand )
+	    return s:DefaultCountStar(a:count . a:starCommand)
 	endif
     else
-	return s:ToggleHighlighting( a:text, a:isWholeWordSearch )
+	return s:ToggleHighlighting(a:text, a:isWholeWordSearch)
     endif
 endfunction
 
