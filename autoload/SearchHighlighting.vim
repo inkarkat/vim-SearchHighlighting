@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - ingosearch.vim autoload script
 "
-" Copyright: (C) 2009-2012 Ingo Karkat
+" Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.02.009	17-Jan-2013	Do not trigger modeline processing when enabling
+"				auto-search highlighting.
 "   1.01.008	03-Dec-2012	FIX: Prevent repeated error message when
 "				an invalid {what} was given to
 "				:SearchAutoHighlighting.
@@ -245,7 +247,11 @@ function! SearchHighlighting#AutoSearchOn()
 	autocmd CursorMoved  * call <SID>AutoSearch()
 	autocmd CursorMovedI * call <SID>AutoSearch()
     augroup END
-    doautocmd SearchHighlightingAutoSearch CursorMoved
+    if v:version == 703 && has('patch438') || v:version > 703
+	doautocmd <nomodeline> SearchHighlightingAutoSearch CursorMoved
+    else
+	doautocmd              SearchHighlightingAutoSearch CursorMoved
+    endif
 endfunction
 
 function! SearchHighlighting#AutoSearchOff()
