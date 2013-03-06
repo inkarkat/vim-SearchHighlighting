@@ -136,6 +136,11 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
+1.10	19-Jan-2013
+- For a blockwise visual selection, don't just match the block's lines on
+  their own, but also when contained in other text.
+- BUG: For {Visual}*, a [count] isn't considered.
+
 1.02	17-Jan-2013
 Do not trigger modeline processing when enabling auto-search highlighting.
 
