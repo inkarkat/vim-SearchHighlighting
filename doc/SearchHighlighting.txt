@@ -53,8 +53,9 @@ http://vim.wikia.com/wiki/VimTip1): >
   optional delay and limited to certain syntax groups.
 - star search (vimscript #4335) changes the behavior of * to not jump to the
   next match, and includes the visual search from the next plugin
-- https://github.com/bronson/vim-visual-star-search can do searching of the
+- https://github.com/bronson/vim-visual-star-search provides searching of the
   visual selection
+- visualstar.vim (vimscript #2944) provides searching of the visual selection
 
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
