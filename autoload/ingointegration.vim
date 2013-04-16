@@ -2,12 +2,21 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010-2012 Ingo Karkat
+" Copyright: (C) 2010-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	013	18-Jan-2013	Allow non-identifier characters in rangeCommand
+"				of
+"				ingointegration#OperatorMappingForRangeCommand()
+"				(e.g. "retab! 4"). Do not just use the
+"				rangeCommand as-is to generate a function name,
+"				but just extract the first word and resolve name
+"				clashes by appending a counter.
+"   	012	28-Dec-2012	Minor: Correct lnum for no-modifiable buffer
+"				check.
 "	011	01-Sep-2012	Duplicate CompleteHelper#ExtractText() here as
 "				ingointegration#GetText() to avoid that
 "				unrelated plugins have a dependency to that
@@ -41,7 +50,7 @@ function! s:OpfuncExpression( opfunc )
 	" dummy modification.
 	" In the case of a nomodifiable buffer, Vim will abort the normal mode
 	" command chain, discard the g@, and thus not invoke the operatorfunc.
-	let l:keys = ":call setline(1, getline(1))\<CR>" . l:keys
+	let l:keys = ":call setline('.', getline('.'))\<CR>" . l:keys
     endif
 
     return l:keys
@@ -68,7 +77,15 @@ function! ingointegration#OperatorMappingForRangeCommand( mapArgs, mapKeys, rang
 "* RETURN VALUES:
 "   None.
 "******************************************************************************
-    let l:rangeCommandOperator = a:rangeCommand . 'Operator'
+    let l:cnt = 0
+    while 1
+	let l:rangeCommandOperator = printf('Range%s%sOperator', matchstr(a:rangeCommand, '\w\+'), (l:cnt ? l:cnt : ''))
+	if ! exists('*s:' . l:rangeCommandOperator)
+	    break
+	endif
+	let l:cnt += 1
+    endwhile
+
     execute printf("
     \	function! s:%s( type )\n
     \	    execute \"'[,']%s\"\n
