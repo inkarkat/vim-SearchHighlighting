@@ -8,6 +8,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	014	17-Apr-2013	Move
+"				ingointegration#BufferRangeToLineRangeCommand()
+"				to ingo#cmdrangeconverter#BufferToLineRange().
+"				Move
+"				ingointegration#OperatorMappingForRangeCommand()
+"				to
+"				ingo#mapmaker#OperatorMappingForRangeCommand().
 "	013	18-Jan-2013	Allow non-identifier characters in rangeCommand
 "				of
 "				ingointegration#OperatorMappingForRangeCommand()
@@ -39,102 +46,6 @@
 "	003	06-Jul-2010	Added ingointegration#DoWhenBufLoaded().
 "	002	24-Mar-2010	Added ingointegration#BufferRangeToLineRangeCommand().
 "	001	19-Mar-2010	file creation
-
-function! s:OpfuncExpression( opfunc )
-    let &opfunc = a:opfunc
-
-    let l:keys = 'g@'
-
-    if ! &l:modifiable || &l:readonly
-	" Probe for "Cannot make changes" error and readonly warning via a no-op
-	" dummy modification.
-	" In the case of a nomodifiable buffer, Vim will abort the normal mode
-	" command chain, discard the g@, and thus not invoke the operatorfunc.
-	let l:keys = ":call setline('.', getline('.'))\<CR>" . l:keys
-    endif
-
-    return l:keys
-endfunction
-function! ingointegration#OperatorMappingForRangeCommand( mapArgs, mapKeys, rangeCommand )
-"******************************************************************************
-"* PURPOSE:
-"   Define a custom operator mapping "\xx{motion}" (where \xx is a:mapKeys) that
-"   allow a [count] before and after the operator and support repetition via
-"   |.|.
-"
-"* ASSUMPTIONS / PRECONDITIONS:
-"   Checks for a 'nomodifiable' or 'readonly' buffer and forces the proper Vim
-"   error / warning, so it assumes that a:rangeCommand mutates the buffer.
-"
-"* EFFECTS / POSTCONDITIONS:
-"   Defines a normal mode mapping for a:mapKeys.
-"* INPUTS:
-"   a:mapArgs	Arguments to the :map command, like '<buffer>' for a
-"		buffer-local mapping.
-"   a:mapKeys	Mapping key [sequence].
-"   a:rangeCommand  Custom Ex command which takes a [range].
-"
-"* RETURN VALUES:
-"   None.
-"******************************************************************************
-    let l:cnt = 0
-    while 1
-	let l:rangeCommandOperator = printf('Range%s%sOperator', matchstr(a:rangeCommand, '\w\+'), (l:cnt ? l:cnt : ''))
-	if ! exists('*s:' . l:rangeCommandOperator)
-	    break
-	endif
-	let l:cnt += 1
-    endwhile
-
-    execute printf("
-    \	function! s:%s( type )\n
-    \	    execute \"'[,']%s\"\n
-    \	endfunction\n",
-    \	l:rangeCommandOperator,
-    \	a:rangeCommand
-    \)
-
-    execute 'nnoremap <expr>' a:mapArgs a:mapKeys '<SID>OpfuncExpression(''<SID>' . l:rangeCommandOperator . ''')'
-endfunction
-
-
-function! ingointegration#BufferRangeToLineRangeCommand( cmd ) range
-"******************************************************************************
-"* MOTIVATION:
-"   You want to invoke a command :Foo in a line-wise mapping <Leader>foo; the
-"   command has a default range=%. The simplest solution is
-"	nnoremap <Leader>foo :<C-u>.Foo<CR>
-"   but that doesn't support a [count]. You cannot use
-"	nnoremap <Leader>foo :Foo<CR>
-"   neither, because then the mapping will work on the entire buffer if no
-"   [count] is given. This utility function wraps the Foo command, passes the
-"   given range, and falls back to the current line when no [count] is given:
-"	nnoremap <Leader>foo :call ingointegration#BufferRangeToLineRangeCommand('Foo')<CR>
-"
-"* PURPOSE:
-"   Always pass the line-wise range to a:cmd.
-"
-"* ASSUMPTIONS / PRECONDITIONS:
-"   None.
-"* EFFECTS / POSTCONDITIONS:
-"   None.
-"* INPUTS:
-"   a:cmd   Ex command which has a default range=%.
-"* RETURN VALUES:
-"   None.
-"******************************************************************************
-    try
-	execute a:firstline . ',' . a:lastline . a:cmd
-    catch /^Vim\%((\a\+)\)\=:E/
-	echohl ErrorMsg
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
-	echomsg v:errmsg
-	echohl None
-    endtry
-endfunction
-
 
 let s:autocmdCnt = 0
 function! ingointegration#DoWhenBufLoaded( command, ... )
