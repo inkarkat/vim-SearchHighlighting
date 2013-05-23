@@ -9,6 +9,17 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.10.010	19-Jan-2013	For a blockwise visual selection, don't just
+"				match the block's lines on their own, but also
+"				when contained in other text.
+"				BUG: For {Visual}*, a [count] isn't considered.
+"				The problem is that getting the visual selection
+"				clobbers v:count. Instead of evaluating v:count
+"				only inside
+"				SearchHighlighting#SearchHighlightingNoJump(),
+"				pass it into the function as an argument before
+"				the selected text, so that it gets evaluated
+"				before the normal mode command clears the count.
 "   1.02.009	17-Jan-2013	Do not trigger modeline processing when enabling
 "				auto-search highlighting.
 "   1.01.008	03-Dec-2012	FIX: Prevent repeated error message when
@@ -111,10 +122,8 @@ endfunction
 
 "- Search Highlighting --------------------------------------------------------
 
-function! s:ToggleHighlighting( text, isWholeWordSearch )
-    let l:searchPattern = ingosearch#LiteralTextToSearchPattern( a:text, a:isWholeWordSearch, '/' )
-
-    if @/ == l:searchPattern && s:isSearchOn
+function! s:ToggleHighlighting( searchPattern )
+    if @/ == a:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
 	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch.
 	"let @/ = ''
@@ -123,7 +132,7 @@ function! s:ToggleHighlighting( text, isWholeWordSearch )
 	return 0
     endif
 
-    let @/ = l:searchPattern
+    let @/ = a:searchPattern
     let s:isSearchOn = 1
 
     " The search pattern is added to the search history, as '/' or '*' would do.
@@ -155,14 +164,8 @@ function! s:DefaultCountStar( starCommand )
     return 1
 endfunction
 
-function! s:VisualCountStar( count, starCommand, text )
-    let l:searchPattern = ingosearch#LiteralTextToSearchPattern(a:text, 0, '/')
-    if visualmode() ==# "\<C-v>"
-	let l:searchPattern = substitute(l:searchPattern, '\\n', '\\ze.*\\n.*', '')
-	let l:searchPattern = substitute(l:searchPattern, '\\n', '.*\\n.*', 'g')
-    endif
-
-    let @/ = l:searchPattern
+function! s:VisualCountStar( count, searchPattern )
+    let @/ = a:searchPattern
     let s:isSearchOn = 1
 
     " The search pattern is added to the search history, as '/' or '*' would do.
@@ -181,14 +184,33 @@ endfunction
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
     call SearchHighlighting#AutoSearchOff()
 
-    if a:count
-	if a:starCommand =~# '^gv'
-	    return s:VisualCountStar(a:count, a:starCommand, a:text)
+    let l:searchPattern = ingosearch#LiteralTextToSearchPattern(a:text, a:isWholeWordSearch, '/')
+
+    if a:starCommand =~# '^gv'
+	if visualmode() ==# "\<C-v>"
+	    " For a blockwise visual selection, don't just match the block's
+	    " lines on their own, but also when contained in other text.
+	    " To completely implement this, we would need a backreference to the
+	    " match's start virtual column, but there's no such atom. So we can
+	    " just build a reguluar expression that matches each block's line
+	    " anywhere in subsequent lines, not necessarily left-aligned.
+	    " To avoid matching the text in between, we stop the match after the
+	    " first block's line.
+	    let l:searchPattern = substitute(l:searchPattern, '\\n', '\\ze.*\\n.*', '')
+	    let l:searchPattern = substitute(l:searchPattern, '\\n', '.*\\n.*', 'g')
+	endif
+
+	if a:count
+	    return s:VisualCountStar(a:count, l:searchPattern)
 	else
-	    return s:DefaultCountStar(a:count . a:starCommand)
+	    return s:ToggleHighlighting(l:searchPattern)
 	endif
     else
-	return s:ToggleHighlighting(a:text, a:isWholeWordSearch)
+	if a:count
+	    return s:DefaultCountStar(a:count . a:starCommand)
+	else
+	    return s:ToggleHighlighting(l:searchPattern)
+	endif
     endif
 endfunction
 
