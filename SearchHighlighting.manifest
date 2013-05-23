@@ -1,0 +1,6 @@
+autoload/EchoWithoutScrolling.vim
+autoload/ingointegration.vim
+autoload/ingosearch.vim
+autoload/SearchHighlighting.vim
+plugin/SearchHighlighting.vim
+doc/SearchHighlighting.txt
