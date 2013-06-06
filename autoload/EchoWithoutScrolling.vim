@@ -27,9 +27,6 @@
 "  - EchoWithoutScrolling#RenderTabs(): The assumption index == char width
 "    doesn't work for unprintable ASCII and any non-ASCII characters.
 "
-" TODO:
-"   - Consider 'cmdheight', add argument isSingleLine.
-"
 " Copyright: (C) 2008-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
@@ -44,25 +41,6 @@
 "				have text that potentially contains line breaks.
 "	002	16-Aug-2008	Split off TruncateTo() from Truncate().
 "	001	22-Jul-2008	file creation
-
-function! s:ReverseStr( expr )
-    return join( reverse( split( a:expr, '\zs' ) ), '' )
-endfunction
-function! s:HasMoreThanVirtCol( expr, virtCol )
-    return (match( a:expr, '^.*\%>' . a:virtCol . 'v' ) != -1)
-endfunction
-function! s:VirtColStrFromStart( expr, virtCol )
-    " Must add 1 because a "before-column" pattern is used in case the exact
-    " column cannot be matched (because its halfway through a tab or other wide
-    " character).
-    return matchstr(a:expr, '^.*\%<' . (a:virtCol + 1) . 'v')
-endfunction
-function! s:VirtColStrFromEnd( expr, virtCol )
-    " Virtual columns are always counted from the start, not the end. To specify
-    " the column counting from the end, the string is reversed during the
-    " matching.
-    return s:ReverseStr( s:VirtColStrFromStart( s:ReverseStr(a:expr), a:virtCol ) )
-endfunction
 
 function! EchoWithoutScrolling#GetTabReplacement( column, tabstop )
     return a:tabstop - (a:column - 1) % a:tabstop
