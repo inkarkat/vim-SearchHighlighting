@@ -2,8 +2,8 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - ingointegration.vim autoload script
-"   - ingosearch.vim autoload script
+"   - ingo/regexp.vim autoload script
+"   - ingo/selection.vim autoload script
 "   - SearchHighlighting.vim autoload script
 "   - EchoWithoutScrolling.vim (optional)
 "
@@ -13,6 +13,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.024	24-May-2013	Move ingointegration#GetVisualSelection() into
+"				ingo-library.
+"			    	Move ingosearch.vim to ingo-library.
 "   1.10.023	19-Jan-2013	BUG: For {Visual}*, a [count] isn't considered.
 "				The problem is that getting the visual selection
 "				clobbers v:count. Instead of evaluating v:count
@@ -173,7 +176,7 @@ if g:SearchHighlighting_NoJump
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match.
     " gV avoids automatic re-selection of the Visual area in select mode.
-    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingointegration#GetVisualSelection(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingo#selection#Get(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap * <Plug>SearchHighlightingStar
@@ -205,8 +208,8 @@ if g:SearchHighlighting_ExtendStandardCommands
     " Search for selected text in visual mode.
     nnoremap <expr> <SID>(SearchForwardWithCount)  (v:count ? v:count : '') . '/'
     nnoremap <expr> <SID>(SearchBackwardWithCount) (v:count ? v:count : '') . '?'
-    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchForwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '/')<CR><CR>:<SID>EchoSearchPatternForward<CR>gV
-    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchBackwardWithCount)<C-R><C-R>=ingosearch#LiteralTextToSearchPattern(ingointegration#GetVisualSelection(), 0, '?')<CR><CR>:<SID>EchoSearchPatternBackward<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchForwardWithCount)<C-R><C-R>=ingo#regexp#FromLiteralText(ingo#selection#Get(), 0, '/')<CR><CR>:<SID>EchoSearchPatternForward<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash :<C-U>call SearchHighlighting#AutoSearchOff()<CR><SID>(SearchBackwardWithCount)<C-R><C-R>=ingo#regexp#FromLiteralText(ingo#selection#Get(), 0, '?')<CR><CR>:<SID>EchoSearchPatternBackward<CR>gV
     xmap * <Plug>SearchHighlightingExtendedStar
     xmap # <Plug>SearchHighlightingExtendedHash
 endif
