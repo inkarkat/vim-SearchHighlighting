@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	016	24-May-2013	Move ingointegration#GetVisualSelection() to
+"				ingo#selection#Get().
 "	015	02-May-2013	Move ingointegration#IsOnSyntaxItem() to
 "				ingo#syntaxitem#IsOnSyntax().
 "	014	17-Apr-2013	Move
@@ -95,30 +97,6 @@ endfunction
 
 
 
-function! ingointegration#GetVisualSelection()
-"******************************************************************************
-"* PURPOSE:
-"   Retrieve the contents of the current visual selection without clobbering any
-"   register.
-"* ASSUMPTIONS / PRECONDITIONS:
-"   Visual selection is / has been made.
-"* EFFECTS / POSTCONDITIONS:
-"   None.
-"* INPUTS:
-"   None.
-"* RETURN VALUES:
-"   Text of visual selection.
-"******************************************************************************
-    let l:save_clipboard = &clipboard
-    set clipboard= " Avoid clobbering the selection and clipboard registers.
-    let l:save_reg = getreg('"')
-    let l:save_regmode = getregtype('"')
-    execute 'silent normal! gvy'
-    let l:selection = @"
-    call setreg('"', l:save_reg, l:save_regmode)
-    let &clipboard = l:save_clipboard
-    return l:selection
-endfunction
 function! ingointegration#GetRange( range )
 "******************************************************************************
 "* PURPOSE:
