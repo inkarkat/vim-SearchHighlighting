@@ -1,4 +1,3 @@
-autoload/EchoWithoutScrolling.vim
 autoload/ingointegration.vim
 autoload/SearchHighlighting.vim
 plugin/SearchHighlighting.vim
