@@ -65,6 +65,20 @@ USAGE						     *SearchHighlighting-usage*
 g*			Toggle search highlighting for the current word
 			on/off.
 {Visual}*		Toggle search highlighting for the selection on/off.
+			For a |blockwise-visual| selection, not just lines
+			that match the block's lines on their own are matched,
+			but all occurrences that contain the block's text,
+			though not just with the same vertical alignment (that
+			isn't possible to assert with Vim's regular
+			expressions), and only the first line's match is
+			highlighted. For example, a match on
+			    foo ~
+			    bar ~
+			will also match all three occurrences in
+			    foo    my foo is        tell foo ~
+			    bar    inside bar		    bar ~
+			but not a single
+			    foo ~
 
 [count]*		Search forward for the [count]'th occurrence of the
 [count]g*		word nearest to the cursor.
