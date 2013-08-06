@@ -1,7 +1,7 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
-"   - ingosearch.vim autoload script
+"   - ingo/regexp.vim autoload script
 "
 " Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -9,6 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.011	24-May-2013	Move ingosearch.vim to ingo-library.
 "   1.10.010	19-Jan-2013	For a blockwise visual selection, don't just
 "				match the block's lines on their own, but also
 "				when contained in other text.
@@ -184,7 +185,7 @@ endfunction
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
     call SearchHighlighting#AutoSearchOff()
 
-    let l:searchPattern = ingosearch#LiteralTextToSearchPattern(a:text, a:isWholeWordSearch, '/')
+    let l:searchPattern = ingo#regexp#FromLiteralText(a:text, a:isWholeWordSearch, '/')
 
     if a:starCommand =~# '^gv'
 	if visualmode() ==# "\<C-v>"
@@ -240,7 +241,7 @@ function! s:AutoSearch()
 	let l:save_regmode = getregtype('"')
 
 	execute 'normal!' l:captureTextCommands
-	let @/ = ingosearch#LiteralTextToSearchPattern(@@, 0, '/')
+	let @/ = ingo#regexp#EscapeLiteralText(@@, '/')
 
 	call setreg('"', l:save_reg, l:save_regmode)
 	let &clipboard = l:save_clipboard
@@ -249,19 +250,19 @@ function! s:AutoSearch()
 	if s:AutoSearchWhat ==# 'line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
 	    if ! empty(l:lineText)
-		let @/ = '^\s*' . ingosearch#LiteralTextToSearchPattern(l:lineText, 0, '/') . '\s*$'
+		let @/ = '^\s*' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '\s*$'
 	    endif
 	elseif s:AutoSearchWhat ==# 'exactline'
 	    let l:lineText = getline('.')
 	    if ! empty(l:lineText)
-		let @/ = '^' . ingosearch#LiteralTextToSearchPattern(l:lineText, 0, '/') . '$'
+		let @/ = '^' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '$'
 	    endif
 	elseif s:AutoSearchWhat ==# 'wword'
-	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<cword>'), 1, '/')
+	    let @/ = ingo#regexp#FromLiteralText(expand('<cword>'), 1, '/')
 	elseif s:AutoSearchWhat ==# 'wWORD'
-	    let @/ = '\%(^\|\s\)\zs' . ingosearch#LiteralTextToSearchPattern(expand('<cWORD>'), 0, '/') . '\ze\%(\s\|$\)'
+	    let @/ = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(expand('<cWORD>'), '/') . '\ze\%(\s\|$\)'
 	elseif s:AutoSearchWhat ==? 'cword'
-	    let @/ = ingosearch#LiteralTextToSearchPattern(expand('<'. s:AutoSearchWhat . '>'), 0, '/')
+	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. s:AutoSearchWhat . '>'), '/')
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(s:AutoSearchWhat)
 	endif
