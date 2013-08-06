@@ -2,10 +2,10 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
+"   - ingo/avoidprompt.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/selection.vim autoload script
 "   - SearchHighlighting.vim autoload script
-"   - EchoWithoutScrolling.vim (optional)
 "
 " Copyright: (C) 2008-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -13,6 +13,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.025	07-Jun-2013	Move EchoWithoutScrolling.vim into ingo-library.
 "   1.11.024	24-May-2013	Move ingointegration#GetVisualSelection() into
 "				ingo-library.
 "			    	Move ingosearch.vim to ingo-library.
@@ -129,16 +130,10 @@ endif
 
 "- integration ----------------------------------------------------------------
 
-" Use EchoWithoutScrolling#Echo to emulate the built-in truncation of the search
-" pattern (via ':set shortmess+=T').
-silent! call EchoWithoutScrolling#MaxLength()	" Execute a function to force autoload.
-if exists('*EchoWithoutScrolling#Echo')
-    cnoremap <SID>EchoSearchPatternForward  call EchoWithoutScrolling#Echo(EchoWithoutScrolling#TranslateLineBreaks('/'.@/))
-    cnoremap <SID>EchoSearchPatternBackward call EchoWithoutScrolling#Echo(EchoWithoutScrolling#TranslateLineBreaks('?'.@/))
-else " fallback
-    cnoremap <SID>EchoSearchPatternForward  echo '/'.@/
-    cnoremap <SID>EchoSearchPatternBackward echo '?'.@/
-endif
+" Use ingo#avoidprompt#EchoAsSingleLine() to emulate the built-in truncation of
+" the search pattern (via ':set shortmess+=T').
+cnoremap <SID>EchoSearchPatternForward  call ingo#avoidprompt#EchoAsSingleLine('/'.@/)
+cnoremap <SID>EchoSearchPatternBackward call ingo#avoidprompt#EchoAsSingleLine('?'.@/)
 
 
 
