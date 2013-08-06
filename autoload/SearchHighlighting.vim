@@ -57,6 +57,8 @@
 "	001	30-May-2009	Moved functions from plugin to separate autoload
 "				script.
 "				file creation
+let s:save_cpo = &cpo
+set cpo&vim
 
 "- Toggle hlsearch ------------------------------------------------------------
 
@@ -179,6 +181,37 @@ function! s:VisualCountStar( count, searchPattern )
     return 1
 endfunction
 
+function! s:OffsetStar( count, searchPattern, offsetFromEnd )
+    let s:isSearchOn = 1
+
+    if a:count
+	let l:prefix = ''
+	let l:suffix = 'zv'
+	let s:offsetPostCommand = ''
+    else
+	let l:prefix = 'keepjumps'
+	let l:suffix = ''
+	let s:offsetPostCommand = 'call winrestview(' . string(winsaveview()) . ')'
+	" When this is returned to the mapping and executed directly, it is
+	" echoed in the command line, thereby obscuring the search command.
+	" Instead, execute it separately.
+    endif
+
+    " Note: When typed, [*#nN] open the fold at the search result, but inside a
+    " mapping or :normal this must be done explicitly via 'zv'.
+    return printf("%s normal! %s/%s/e%s\<CR>%s",
+    \   l:prefix,
+    \   (a:count > 1 ? a:count : ''),
+    \   a:searchPattern,
+    \   (a:offsetFromEnd > 1 ? -1 * a:offsetFromEnd : ''),
+    \   l:suffix
+    \)
+endfunction
+function! SearchHighlighting#OffsetPostCommand()
+    execute s:offsetPostCommand
+    let s:offsetPostCommand = ''
+endfunction
+
 " This function can also be used in other scripts, to avoid complicated
 " invocations of (and the echoing inside)
 " execute "normal \<Plug>SearchHighlightingStar"
@@ -187,7 +220,18 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text,
 
     let l:searchPattern = ingo#regexp#FromLiteralText(a:text, a:isWholeWordSearch, '/')
 
-    if a:starCommand =~# '^gv'
+    if a:starCommand ==# 'c*'
+	let [l:startPos, l:endPos] = ingo#selection#frompattern#GetPositions('\%' . col('.') . 'c\%(\%(\k\@!.\)*\zs\k\+\|\%(\k*\|\s*\)\zs\%(\k\@!\S\)\+\)', line('.'))
+	if l:startPos != [0, 0]
+	    let l:cwordAfterCursor = ingo#text#Get(l:startPos, l:endPos)
+	    if strpart(a:text, len(a:text) - len(l:cwordAfterCursor)) ==# l:cwordAfterCursor
+		let l:offsetFromEnd = ingo#compat#strchars(l:cwordAfterCursor) - 1
+"****D echomsg '****' string(l:cwordAfterCursor) l:offsetFromEnd
+		return s:OffsetStar( count, l:searchPattern, l:offsetFromEnd)
+	    endif
+	endif
+	return 'echoerr "E348: No string under cursor"'
+    elseif a:starCommand ==# 'gv*'
 	if visualmode() ==# "\<C-v>"
 	    " For a blockwise visual selection, don't just match the block's
 	    " lines on their own, but also when contained in other text.
@@ -330,4 +374,6 @@ function! SearchHighlighting#SetAutoSearch( ... )
     return 1
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
