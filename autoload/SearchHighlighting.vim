@@ -1,6 +1,7 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
+"   - ingo/compat.vim autoload script
 "   - ingo/regexp.vim autoload script
 "
 " Copyright: (C) 2009-2013 Ingo Karkat
@@ -184,7 +185,7 @@ endfunction
 function! s:OffsetStar( count, searchPattern, offsetFromEnd )
     let s:isSearchOn = 1
 
-    if a:count
+    if ! g:SearchHighlighting_NoJump || a:count
 	let l:prefix = ''
 	let l:suffix = 'zv'
 	let s:offsetPostCommand = ''
