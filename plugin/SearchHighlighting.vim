@@ -167,7 +167,6 @@ if g:SearchHighlighting_NoJump
     " If highlighting is turned on, the search pattern is echoed, just like the star command does.
     nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*', v:count, expand('<cword>'), 1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
     nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*', v:count, expand('<cword>'), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingCStar :<C-U>execute SearchHighlighting#SearchHighlightingNoJump('c*', v:count, expand('<cword>'), 1)<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match.
@@ -179,9 +178,6 @@ if g:SearchHighlighting_NoJump
     endif
     if ! hasmapto('<Plug>SearchHighlightingGStar', 'n')
 	nmap g* <Plug>SearchHighlightingGStar
-    endif
-    if ! hasmapto('<Plug>SearchHighlightingCStar', 'n')
-	nmap ,* <Plug>SearchHighlightingCStar
     endif
     if ! hasmapto('<Plug>SearchHighlightingStar', 'x')
 	xmap * <Plug>SearchHighlightingStar
@@ -213,6 +209,14 @@ if g:SearchHighlighting_ExtendStandardCommands
     xmap # <Plug>SearchHighlightingExtendedHash
 endif
 
+
+
+"- mappings Search Current Position --------------------------------------------
+
+nnoremap <script> <silent> <Plug>SearchHighlightingCStar :<C-U>execute SearchHighlighting#SearchHighlightingNoJump('c*', v:count, expand('<cword>'), 1)<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+if ! hasmapto('<Plug>SearchHighlightingCStar', 'n')
+    nmap ,* <Plug>SearchHighlightingCStar
+endif
 
 
 "- mappings Auto Search Highlighting ------------------------------------------
