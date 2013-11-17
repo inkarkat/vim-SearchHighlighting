@@ -2,6 +2,7 @@
 "
 " DEPENDENCIES:
 "   - ingo/compat.vim autoload script
+"   - ingo/err.vim autoload script
 "   - ingo/regexp.vim autoload script
 "
 " Copyright: (C) 2009-2013 Ingo Karkat
@@ -10,6 +11,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.012	07-Aug-2013	ENH: Add ,* search that keeps the current
+"				position within the current word when jumping to
+"				subsequent matches.
+"				Correctly emulate * behavior on whitespace-only
+"				lines where there's no cword: Issue "E348: No
+"				string under cursor".
 "   1.11.011	24-May-2013	Move ingosearch.vim to ingo-library.
 "   1.10.010	19-Jan-2013	For a blockwise visual selection, don't just
 "				match the block's lines on their own, but also
@@ -187,6 +194,8 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 
     if ! g:SearchHighlighting_NoJump || a:count
 	let l:prefix = ''
+	" Note: When typed, [*#nN] open the fold at the search result, but
+	" inside a mapping or :normal this must be done explicitly via 'zv'.
 	let l:suffix = 'zv'
 	let s:offsetPostCommand = ''
     else
@@ -198,8 +207,10 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 	" Instead, execute it separately.
     endif
 
-    " Note: When typed, [*#nN] open the fold at the search result, but inside a
-    " mapping or :normal this must be done explicitly via 'zv'.
+    " XXX: We cannot just :execute the command here, the offset part would be
+    " lost on search repetitions via n/N. So instead return the Ex command to
+    " the mapping for execution. This is possible here because we don't need the
+    " return value to indicate the toggle state, as in the other mappings.
     return printf("%s normal! %s/%s/e%s\<CR>%s",
     \   l:prefix,
     \   (a:count > 1 ? a:count : ''),
@@ -217,6 +228,13 @@ endfunction
 " invocations of (and the echoing inside)
 " execute "normal \<Plug>SearchHighlightingStar"
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
+    if empty(a:text)
+	call ingo#err#Set('E348: No string under cursor')
+	return 0
+    else
+	call ingo#err#Clear()
+    endif
+
     call SearchHighlighting#AutoSearchOff()
 
     let l:searchPattern = ingo#regexp#FromLiteralText(a:text, a:isWholeWordSearch, '/')
