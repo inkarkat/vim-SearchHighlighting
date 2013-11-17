@@ -86,6 +86,13 @@ g*			Toggle search highlighting for the current word
 [count]g*		word nearest to the cursor.
 {Visual}[count]*
 
+[count],*		Search forward for the [count]'th occurrence of the
+			word under the cursor, keeping the cursor at the
+			current position within the word's matches (via
+			|search-offset|).
+			Observes the new non-jumping behavior of the star
+			commands without a [count].
+
 <Leader>*		Toggle auto-search highlighting (using the last
 			{what}; default is "wword").
 						     *:SearchAutoHighlighting*
@@ -118,12 +125,18 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				      *SearchHighlighting-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.008 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.012 or
   higher.
 
 ==============================================================================
 CONFIGURATION				     *SearchHighlighting-configuration*
-
+						    *SearchHighlighting-remap*
+If you want to use different mappings, map your keys to the
+<Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
+in your |vimrc|): >
+    nmap <Leader>*. <Plug>SearchHighlightingCStar
+    nmap <Leader>** <Plug>SearchHighlightingAutoSearch
+<
 If you do not want the new non-jumping behavior of the star commands at all: >
     let g:SearchHighlighting_NoJump = 0
     let g:SearchHighlighting_ExtendStandardCommands = 1
@@ -155,7 +168,11 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-1.11	RELEASEME
+1.20	RELEASEME
+- ENH: Add ,* search that keeps the current position within the current word
+  when jumping to subsequent matches.
+- Correctly emulate * behavior on whitespace-only lines where there's no
+  cword: Issue "E348: No string under cursor".
 - Add dependency to ingo-library (vimscript #4433).
 
 1.10	19-Jan-2013
