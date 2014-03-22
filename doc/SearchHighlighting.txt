@@ -168,14 +168,15 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-1.20	RELEASEME
+1.20	29-Nov-2013
 - ENH: Add ,* search that keeps the current position within the current word
   when jumping to subsequent matches.
 - Correctly emulate * behavior on whitespace-only lines where there's no
   cword: Issue "E348: No string under cursor".
-- Add dependency to ingo-library (vimscript #4433).
+- Add dependency to ingo-library (vimscript #4433). *** You need to separately
+  install ingo-library (vimscript #4433) version 1.015 (or higher)! ***
 
-1.10	19-Jan-2013
+1.10	19-Jan-2013 (unreleased)
 - For a blockwise visual selection, don't just match the block's lines on
   their own, but also when contained in other text.
 - BUG: For {Visual}*, a [count] isn't considered.
