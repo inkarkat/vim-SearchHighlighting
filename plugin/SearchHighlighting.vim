@@ -3,6 +3,7 @@
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
 "   - ingo/avoidprompt.vim autoload script
+"   - ingo/err.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/selection.vim autoload script
 "   - SearchHighlighting.vim autoload script
@@ -13,6 +14,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.026	07-Aug-2013	ENH: Add ,* search that keeps the current
+"				position within the current word when jumping to
+"				subsequent matches.
+"				Correctly emulate * behavior on whitespace-only
+"				lines where there's no cword: Issue "E348: No
+"				string under cursor".
 "   1.11.025	07-Jun-2013	Move EchoWithoutScrolling.vim into ingo-library.
 "   1.11.024	24-May-2013	Move ingointegration#GetVisualSelection() into
 "				ingo-library.
@@ -165,8 +172,8 @@ if g:SearchHighlighting_NoJump
     " [count]'th occurence.
     " <cword> selects the (key)word under or after the cursor, just like the star command.
     " If highlighting is turned on, the search pattern is echoed, just like the star command does.
-    nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*', v:count, expand('<cword>'), 1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*', v:count, expand('<cword>'), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-U>if SearchHighlighting#SearchHighlightingNoJump( '*', v:count, expand('<cword>'), 1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-U>if SearchHighlighting#SearchHighlightingNoJump('g*', v:count, expand('<cword>'), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match.
@@ -225,6 +232,7 @@ nnoremap <silent> <Plug>SearchHighlightingAutoSearch :if SearchHighlighting#Togg
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'n')
     nmap <silent> <Leader>* :if SearchHighlighting#ToggleAutoSearch()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 endif
+
 
 "- commands Auto Search Highlighting ------------------------------------------
 
