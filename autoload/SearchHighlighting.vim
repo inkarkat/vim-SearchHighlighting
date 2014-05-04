@@ -4,6 +4,7 @@
 "   - ingo/compat.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/regexp.vim autoload script
+"   - ingo/register.vim autoload script
 "
 " Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -11,6 +12,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.013	18-Nov-2013	Use ingo#register#KeepRegisterExecuteOrFunc().
 "   1.20.012	07-Aug-2013	ENH: Add ,* search that keeps the current
 "				position within the current word when jumping to
 "				subsequent matches.
@@ -298,16 +300,9 @@ function! s:AutoSearch()
 	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
 	endif
 
-	let l:save_clipboard = &clipboard
-	set clipboard= " Avoid clobbering the selection and clipboard registers.
-	let l:save_reg = getreg('"')
-	let l:save_regmode = getregtype('"')
-
-	execute 'normal!' l:captureTextCommands
-	let @/ = ingo#regexp#EscapeLiteralText(@@, '/')
-
-	call setreg('"', l:save_reg, l:save_regmode)
-	let &clipboard = l:save_clipboard
+	call ingo#register#KeepRegisterExecuteOrFunc(
+	\   'execute "normal! ' . l:captureTextCommands . '" | let @/ = ingo#regexp#EscapeLiteralText(@", "/")'
+	\)
     else
 	" Search for the configured entity.
 	if s:AutoSearchWhat ==# 'line'
