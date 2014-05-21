@@ -6,12 +6,13 @@
 "   - ingo/regexp.vim autoload script
 "   - ingo/register.vim autoload script
 "
-" Copyright: (C) 2009-2013 Ingo Karkat
+" Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.014	05-May-2014	Also abort on :SearchAutoHighlighting error.
 "   1.20.013	18-Nov-2013	Use ingo#register#KeepRegisterExecuteOrFunc().
 "   1.20.012	07-Aug-2013	ENH: Add ,* search that keeps the current
 "				position within the current word when jumping to
@@ -375,11 +376,7 @@ endfunction
 function! SearchHighlighting#SetAutoSearch( ... )
     if a:0
 	if index(s:AutoSearchWhatValues, a:1) == -1
-	    let v:errmsg = 'Unknown search entity "' . a:1 . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', ')
-	    echohl ErrorMsg
-	    echomsg v:errmsg
-	    echohl None
-
+	    call ingo#err#Set('Unknown search entity "' . a:1 . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', '))
 	    return 0
 	endif
 	let s:AutoSearchWhat = a:1
