@@ -176,6 +176,7 @@ HISTORY						   *SearchHighlighting-history*
 
 1.21	RELEASEME
 - Also abort on :SearchAutoHighlighting error.
+- Remove duplicate /.*.*/ in pattern for visual blockwise search.
 
 1.20	29-Nov-2013
 - ENH: Add ,* search that keeps the current position within the current word
