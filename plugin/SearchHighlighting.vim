@@ -8,12 +8,13 @@
 "   - ingo/selection.vim autoload script
 "   - SearchHighlighting.vim autoload script
 "
-" Copyright: (C) 2008-2013 Ingo Karkat
+" Copyright: (C) 2008-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.027	05-May-2014	Also abort on :SearchAutoHighlighting error.
 "   1.20.026	07-Aug-2013	ENH: Add ,* search that keeps the current
 "				position within the current word when jumping to
 "				subsequent matches.
@@ -236,7 +237,7 @@ endif
 
 "- commands Auto Search Highlighting ------------------------------------------
 
-command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting if SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif | endif
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting if SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif | else | echoerr ingo#err#Get() | endif
 command! -bar NoSearchAutoHighlighting call SearchHighlighting#AutoSearchOff() | nohlsearch
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
