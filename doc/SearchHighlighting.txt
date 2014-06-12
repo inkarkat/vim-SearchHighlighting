@@ -174,7 +174,7 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-1.21	RELEASEME
+1.21	23-May-2014
 - Also abort on :SearchAutoHighlighting error.
 - Remove duplicate /.*.*/ in pattern for visual blockwise search.
 
