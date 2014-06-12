@@ -12,6 +12,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.015	22-May-2014	Remove duplicate .*.* in pattern for visual
+"				blockwise search.
 "   1.21.014	05-May-2014	Also abort on :SearchAutoHighlighting error.
 "   1.20.013	18-Nov-2013	Use ingo#register#KeepRegisterExecuteOrFunc().
 "   1.20.012	07-Aug-2013	ENH: Add ,* search that keeps the current
@@ -256,15 +258,15 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text,
     elseif a:starCommand ==# 'gv*'
 	if visualmode() ==# "\<C-v>"
 	    " For a blockwise visual selection, don't just match the block's
-	    " lines on their own, but also when contained in other text.
-	    " To completely implement this, we would need a backreference to the
+	    " lines on their own, but also when contained in other text. To
+	    " completely implement this, we would need a back-reference to the
 	    " match's start virtual column, but there's no such atom. So we can
-	    " just build a reguluar expression that matches each block's line
+	    " just build a regular expression that matches each block's line
 	    " anywhere in subsequent lines, not necessarily left-aligned.
 	    " To avoid matching the text in between, we stop the match after the
 	    " first block's line.
-	    let l:searchPattern = substitute(l:searchPattern, '\\n', '\\ze.*\\n.*', '')
 	    let l:searchPattern = substitute(l:searchPattern, '\\n', '.*\\n.*', 'g')
+	    let l:searchPattern = substitute(l:searchPattern, '\.\*\\n\.\*', '\\ze&', '')
 	endif
 
 	if a:count
