@@ -72,6 +72,7 @@ USAGE						     *SearchHighlighting-usage*
 			\<word\> on/off.
 g*			Toggle search highlighting for the current word
 			on/off.
+								      *v_star*
 {Visual}*		Toggle search highlighting for the selection on/off.
 			For a |blockwise-visual| selection, not just lines
 			that match the block's lines on their own are matched,
@@ -91,16 +92,20 @@ g*			Toggle search highlighting for the current word
 [count]*		Search forward for the [count]'th occurrence of the
 [count]g*		word nearest to the cursor.
 {Visual}[count]*
-
+								       *,star*
 [count],*		Search forward for the [count]'th occurrence of the
 			word under the cursor, keeping the cursor at the
 			current position within the word's matches (via
 			|search-offset|).
 			Observes the new non-jumping behavior of the star
 			commands without a [count].
-
+					       *<Leader>star* *v_<Leader>star*
 <Leader>*		Toggle auto-search highlighting (using the last
 			{what}; default is "wword").
+{Visual}<Leader>*	Toggle auto-search highlighting; when turning on, a
+			{what} value of "selection" is used (but the preset
+			isn't changed; the original value is used for a later
+			non-visual mode auto-search).
 						     *:SearchAutoHighlighting*
 :SearchAutoHighlighting [{what}]
 			Turn on automatic highlighting of occurrences of
@@ -113,6 +118,8 @@ g*			Toggle search highlighting for the current word
 			line:  current text in line, excluding indent and
 			       trailing whitespace
 			exactline: exact current line
+			selection: only highlight selected text, in normal
+				   mode, nothing is selected
 						   *:NoSearchAutoHighlighting*
 :NoSearchAutoHighlighting
 			Turn off automatic highlighting.
@@ -173,6 +180,12 @@ IDEAS						     *SearchHighlighting-ideas*
 
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
+
+1.22	RELEASEME
+- Add <Leader>* visual mode mapping that turns on auto-search only for
+  selected text (without affecting the original {what} default).
+- Add "selection" value for {what} in :SearchHighlightingAutoSearch that only
+  highlights selected text.
 
 1.21	23-May-2014
 - Also abort on :SearchAutoHighlighting error.
