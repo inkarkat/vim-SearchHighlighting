@@ -181,7 +181,7 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-1.22	RELEASEME
+1.22	19-Jun-2014
 - Add <Leader>* visual mode mapping that turns on auto-search only for
   selected text (without affecting the original {what} default).
 - Add "selection" value for {what} in :SearchHighlightingAutoSearch that only
