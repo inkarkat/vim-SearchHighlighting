@@ -64,6 +64,8 @@ http://vim.wikia.com/wiki/VimTip1): >
 - https://github.com/bronson/vim-visual-star-search provides searching of the
   visual selection
 - visualstar.vim (vimscript #2944) provides searching of the visual selection
+- select & search (vimscript #4819) can use either n/N or * in the visual
+  selection, and (like this plugin) can avoid jumping.
 
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
