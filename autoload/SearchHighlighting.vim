@@ -12,6 +12,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.22.016	13-Jun-2014	Add auto-search value of "selection" to only
+"				highlight selected text.
+"				Implement toggling of auto-search in visual
+"				mode. Save the original configured value and
+"				restore that for a later normal mode toggling.
 "   1.21.015	22-May-2014	Remove duplicate .*.* in pattern for visual
 "				blockwise search.
 "   1.21.014	05-May-2014	Also abort on :SearchAutoHighlighting error.
@@ -288,19 +293,19 @@ endfunction
 "- Autosearch -----------------------------------------------------------------
 
 let s:AutoSearchWhat = 'wword'
-let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line']
+let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line', 'selection']
 function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
     return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
 endfunction
-function! s:AutoSearch()
-    if stridx("sS\<C-S>vV\<C-V>", mode()) != -1
+function! s:AutoSearch( mode )
+    if stridx("sS\<C-s>vV\<C-v>", a:mode) != -1
 	" In visual and select mode, search for the selected text.
 
 	let l:captureTextCommands = 'ygv'
-	if stridx("sS\<C-S>", mode()) != -1
+	if stridx("sS\<C-s>", a:mode) != -1
 	    " To be able to yank in select mode, we need to temporarily switch
 	    " to visual mode, then back to select mode.
-	    let l:captureTextCommands = "\<C-G>" . l:captureTextCommands . "\<C-G>"
+	    let l:captureTextCommands = "\<C-g>" . l:captureTextCommands . "\<C-g>"
 	endif
 
 	call ingo#register#KeepRegisterExecuteOrFunc(
@@ -324,6 +329,8 @@ function! s:AutoSearch()
 	    let @/ = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(expand('<cWORD>'), '/') . '\ze\%(\s\|$\)'
 	elseif s:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. s:AutoSearchWhat . '>'), '/')
+	elseif s:AutoSearchWhat ==# 'selection'
+	    " Just search for the selected text, nothing in normal mode.
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(s:AutoSearchWhat)
 	endif
@@ -333,8 +340,8 @@ endfunction
 function! SearchHighlighting#AutoSearchOn()
     augroup SearchHighlightingAutoSearch
 	autocmd!
-	autocmd CursorMoved  * call <SID>AutoSearch()
-	autocmd CursorMovedI * call <SID>AutoSearch()
+	autocmd CursorMoved  * call <SID>AutoSearch(mode())
+	autocmd CursorMovedI * call <SID>AutoSearch(mode())
     augroup END
     if v:version == 703 && has('patch438') || v:version > 703
 	doautocmd <nomodeline> SearchHighlightingAutoSearch CursorMoved
@@ -363,12 +370,33 @@ function! SearchHighlighting#AutoSearchOff()
     return 1
 endfunction
 
-function! SearchHighlighting#ToggleAutoSearch()
+function! SearchHighlighting#ToggleAutoSearch( isVisualMode )
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
 	call SearchHighlighting#AutoSearchOff()
-	echomsg 'Disabled search auto-highlighting'
+
+	if exists('s:normalModeAutoSearchWhat')
+	    let s:AutoSearchWhat = s:normalModeAutoSearchWhat
+	    unlet s:normalModeAutoSearchWhat
+	    echomsg printf('Disabled search auto-highlighting (and revert to %s)', s:AutoSearchWhat)
+	else
+	    echomsg 'Disabled search auto-highlighting'
+	endif
+
+
+	if a:isVisualMode
+	    " Keep the selection when turning off auto-search. One doesn't need
+	    " to go to visual mode in order to do this, so this probably means
+	    " that the highlighting is irritating while selecting.
+	    normal! gv
+	endif
+
 	return 0
     else
+	if a:isVisualMode && s:AutoSearchWhat !=# 'selection'
+	    let s:normalModeAutoSearchWhat = s:AutoSearchWhat
+	    let s:AutoSearchWhat = 'selection'
+	endif
+
 	call SearchHighlighting#AutoSearchOn()
 	echomsg 'Enabled search auto-highlighting of' s:AutoSearchWhat
 	return 1
