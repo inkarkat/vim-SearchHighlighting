@@ -292,12 +292,19 @@ endfunction
 
 "- Autosearch -----------------------------------------------------------------
 
-let s:AutoSearchWhat = 'wword'
+let g:AutoSearchWhat = 'wword'
 let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line', 'selection']
 function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
     return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
 endfunction
 function! s:AutoSearch( mode )
+    let l:isAutoSearch = ingo#plugin#setting#GetFromScope('AutoSearch', ['w', 't', 'g'], 0)
+    if ! l:isAutoSearch
+	call s:RestoreLastSearchPattern()
+	return
+    endif
+
+
     if stridx("sS\<C-s>vV\<C-v>", a:mode) != -1
 	" In visual and select mode, search for the selected text.
 
@@ -343,6 +350,11 @@ function! SearchHighlighting#AutoSearchOn()
 	autocmd CursorMoved  * call <SID>AutoSearch(mode())
 	autocmd CursorMovedI * call <SID>AutoSearch(mode())
     augroup END
+
+    call s:TriggerAutoSaveUpdate()
+endfunction
+
+function! s:TriggerAutoSaveUpdate()
     if v:version == 703 && has('patch438') || v:version > 703
 	doautocmd <nomodeline> SearchHighlightingAutoSearch CursorMoved
     else
@@ -350,15 +362,35 @@ function! SearchHighlighting#AutoSearchOn()
     endif
 endfunction
 
-function! SearchHighlighting#AutoSearchOff()
+function! SearchHighlighting#AutoSearchOff( ... )
     if ! exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	" Short-circuit optimization.
+	" Short-circuit optimization; Auto Search already disabled.
 	return 0
     endif
-    augroup SearchHighlightingAutoSearch
-	autocmd!
-    augroup END
 
+    let l:isKeepAutoSearch = 0
+    if a:0
+	execute 'unlet!' a:1 . ':AutoSearch'
+
+	if a:1 ==# 'g'
+	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['w'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['t'], 0)
+	elseif a:1 ==# 't'
+	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['w'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['g'], 0)
+	elseif a:1 ==# 'w'
+	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['t'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['g'], 0)
+	endif
+    endif
+
+    if l:isKeepAutoSearch
+	call s:TriggerAutoSaveUpdate()
+    else
+	call s:RestoreLastSearchPattern()
+    endif
+
+    call s:DisableHooksIfNoAutoSearchAtAll()
+    return 1
+endfunction
+function! s:RestoreLastSearchPattern()
     " Restore the last used search pattern.
     let @/ = histget('search', -1)
 
@@ -366,9 +398,37 @@ function! SearchHighlighting#AutoSearchOff()
     " that it must have turned the highlighting on, not off. (This improves the
     " accuracy of the s:isSearchOn workaround.)
     call SearchHighlighting#SearchOff()
-
-    return 1
 endfunction
+function! s:DisableHooksIfNoAutoSearchAtAll()
+    " Find out whether there's no window / tab page / global Auto Search, and
+    " only then turn off the autocmds.
+    if s:AutoSearch || s:HasTabScopedAutoSearch() || s:HasWindowScopedAutoSearch()
+	return
+    endif
+
+    augroup SearchHighlightingAutoSearch
+	autocmd!
+    augroup END
+endfunction
+function! s:HasTabScopedAutoSearch()
+    for l:tabNr in range(1, tabpagenr('$'))
+	if gettabvar(l:tabNr, 'AutoSearch')
+	    return 1
+	endif
+    endfor
+    return 0
+endfunction
+function! s:HasWindowScopedAutoSearch()
+    for l:tabNr in range(1, tabpagenr('$'))
+	for l:winNr in range(1, tabpagewinnr(l:tabNr, '$'))
+	    if gettabwinvar(l:tabNr, l:winNr, 'AutoSearch')
+		return 1
+	    endif
+	endfor
+    endfor
+    return 0
+endfunction
+
 
 function! SearchHighlighting#ToggleAutoSearch( isVisualMode )
     if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
@@ -403,14 +463,16 @@ function! SearchHighlighting#ToggleAutoSearch( isVisualMode )
     endif
 endfunction
 
-function! SearchHighlighting#SetAutoSearch( ... )
+function! SearchHighlighting#SetAutoSearch( scope, ... )
     if a:0
 	if index(s:AutoSearchWhatValues, a:1) == -1
 	    call ingo#err#Set('Unknown search entity "' . a:1 . '"; must be one of: ' . join(s:AutoSearchWhatValues, ', '))
 	    return 0
 	endif
-	let s:AutoSearchWhat = a:1
+	execute 'let' a:scope . ':AutoSearchWhat = a:1'
     endif
+
+    execute 'let' a:scope . ':AutoSearch= 1'
 
     return 1
 endfunction
