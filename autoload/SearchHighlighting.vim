@@ -3,8 +3,11 @@
 " DEPENDENCIES:
 "   - ingo/compat.vim autoload script
 "   - ingo/err.vim autoload script
+"   - ingo/plugin/setting.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/register.vim autoload script
+"   - ingo/selection/frompattern.vim autoload script
+"   - ingo/text.vim autoload script
 "
 " Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -12,6 +15,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.017	06-Dec-2014	Change s:AutoSearchWhat to global variable and
+"				allow for separately tab page- and window-scoped ones.
+"				Extend SearchHighlighting#AutoSearchOff() logic
+"				to account for different scopes and only remove
+"				the autocmd hooks when no Auto Search at all is
+"				active any more.
+"				Consider the scopes in s:AutoSearch().
 "   1.22.016	13-Jun-2014	Add auto-search value of "selection" to only
 "				highlight selected text.
 "				Implement toggling of auto-search in visual
@@ -298,10 +308,10 @@ function! SearchHighlighting#AutoSearchComplete( ArgLead, CmdLine, CursorPos )
     return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
 endfunction
 function! s:AutoSearch( mode )
-    let l:isAutoSearch = ingo#plugin#setting#GetFromScope('AutoSearch', ['w', 't', 'g'], 0)
+    let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
     if ! l:isAutoSearch
 	call s:RestoreLastSearchPattern()
-	return
+	return 0
     endif
 
 
@@ -320,28 +330,34 @@ function! s:AutoSearch( mode )
 	\)
     else
 	" Search for the configured entity.
-	if s:AutoSearchWhat ==# 'line'
+	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
+	if l:AutoSearchWhat ==# 'line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
 	    if ! empty(l:lineText)
 		let @/ = '^\s*' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '\s*$'
 	    endif
-	elseif s:AutoSearchWhat ==# 'exactline'
+	elseif l:AutoSearchWhat ==# 'exactline'
 	    let l:lineText = getline('.')
 	    if ! empty(l:lineText)
 		let @/ = '^' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '$'
 	    endif
-	elseif s:AutoSearchWhat ==# 'wword'
+	elseif l:AutoSearchWhat ==# 'wword'
 	    let @/ = ingo#regexp#FromLiteralText(expand('<cword>'), 1, '/')
-	elseif s:AutoSearchWhat ==# 'wWORD'
+	elseif l:AutoSearchWhat ==# 'wWORD'
 	    let @/ = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(expand('<cWORD>'), '/') . '\ze\%(\s\|$\)'
-	elseif s:AutoSearchWhat ==? 'cword'
-	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. s:AutoSearchWhat . '>'), '/')
-	elseif s:AutoSearchWhat ==# 'selection'
+	elseif l:AutoSearchWhat ==? 'cword'
+	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
+	elseif l:AutoSearchWhat ==# 'selection'
 	    " Just search for the selected text, nothing in normal mode.
 	else
-	    throw 'ASSERT: Unknown search entity ' . string(s:AutoSearchWhat)
+	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
 	endif
     endif
+
+    return 1
+endfunction
+function! s:GetFromScope( variableName, defaultValue )
+    return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
 endfunction
 
 function! SearchHighlighting#AutoSearchOn()
@@ -368,27 +384,62 @@ function! SearchHighlighting#AutoSearchOff( ... )
 	return 0
     endif
 
-    let l:isKeepAutoSearch = 0
     if a:0
-	execute 'unlet!' a:1 . ':AutoSearch'
+	let l:isExplicitTurnOff = a:2
 
 	if a:1 ==# 'g'
-	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['w'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['t'], 0)
-	elseif a:1 ==# 't'
-	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['w'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['g'], 0)
-	elseif a:1 ==# 'w'
-	    let l:isKeepAutoSearch = ingo#plugin#setting#GetFromScope('AutoSave', ['t'], 0) || ingo#plugin#setting#GetFromScope('AutoSave', ['g'], 0)
+	    let l:isExplicitTurnOff = 1 " The distinction doesn't make sense for the global flag.
+	    if a:2
+		" Turn off all other scopes, too.
+		call s:RemoveScopedAutoSearches()
+	    endif
+	endif
+
+	if l:isExplicitTurnOff
+	    execute 'let' a:1 . ':AutoSearch = 0'
+	else
+	    execute 'unlet!' a:1 . ':AutoSearch'
+	endif
+    else
+	" Find the scope where Auto Search is active and turn off that scope.
+	if exists('w:AutoSearch')
+	    let w:AutoSearch = 0
+	elseif exists('t:AutoSearch')
+	    let t:AutoSearch = 0
+	elseif exists('g:AutoSearch')
+	    let g:AutoSearch = 0
 	endif
     endif
 
-    if l:isKeepAutoSearch
-	call s:TriggerAutoSaveUpdate()
-    else
-	call s:RestoreLastSearchPattern()
-    endif
-
+    call s:TriggerAutoSaveUpdate()
     call s:DisableHooksIfNoAutoSearchAtAll()
     return 1
+endfunction
+function! s:RemoveScopedAutoSearches()
+    " Since there's no unlettabwinvar(), we have to visit every tab page /
+    " window that has a AutoSearch variable defined.
+    let [l:currentTabNr, l:currentWinNr] = [tabpagenr(), winnr()]
+    for l:tabNr in range(1, tabpagenr('$'))
+	for l:winNr in range(1, tabpagewinnr(l:tabNr, '$'))
+	    if gettabwinvar(l:tabNr, l:winNr, 'AutoSearch') isnot# ''
+		noautocmd execute l:tabNr . 'tabnext'
+		noautocmd execute l:winNr . 'wincmd w'
+		unlet! w:AutoSearch
+	    endif
+
+	    if gettabvar(l:tabNr, 'AutoSearch') isnot# ''
+		noautocmd execute l:tabNr . 'tabnext'
+		unlet! t:AutoSearch
+	    endif
+	endfor
+    endfor
+
+    if l:currentTabNr != tabpagenr()
+	noautocmd execute l:currentTabNr . 'tabnext'
+    endif
+    if l:currentWinNr != winnr()
+	noautocmd execute l:currentWinNr . 'wincmd w'
+    endif
 endfunction
 function! s:RestoreLastSearchPattern()
     " Restore the last used search pattern.
@@ -402,7 +453,7 @@ endfunction
 function! s:DisableHooksIfNoAutoSearchAtAll()
     " Find out whether there's no window / tab page / global Auto Search, and
     " only then turn off the autocmds.
-    if s:AutoSearch || s:HasTabScopedAutoSearch() || s:HasWindowScopedAutoSearch()
+    if exists('g:AutoSearch') && g:AutoSearch || s:HasTabScopedAutoSearch() || s:HasWindowScopedAutoSearch()
 	return
     endif
 
@@ -431,13 +482,13 @@ endfunction
 
 
 function! SearchHighlighting#ToggleAutoSearch( isVisualMode )
-    if exists('#SearchHighlightingAutoSearch#CursorMoved#*')
-	call SearchHighlighting#AutoSearchOff()
+    if exists('g:AutoSearch') && g:AutoSearch
+	call SearchHighlighting#AutoSearchOff('g', 0)
 
 	if exists('s:normalModeAutoSearchWhat')
-	    let s:AutoSearchWhat = s:normalModeAutoSearchWhat
+	    let g:AutoSearchWhat = s:normalModeAutoSearchWhat
 	    unlet s:normalModeAutoSearchWhat
-	    echomsg printf('Disabled search auto-highlighting (and revert to %s)', s:AutoSearchWhat)
+	    echomsg printf('Disabled search auto-highlighting (and revert to %s)', g:AutoSearchWhat)
 	else
 	    echomsg 'Disabled search auto-highlighting'
 	endif
@@ -452,13 +503,14 @@ function! SearchHighlighting#ToggleAutoSearch( isVisualMode )
 
 	return 0
     else
-	if a:isVisualMode && s:AutoSearchWhat !=# 'selection'
-	    let s:normalModeAutoSearchWhat = s:AutoSearchWhat
-	    let s:AutoSearchWhat = 'selection'
+	let g:AutoSearch = 1
+	if a:isVisualMode && g:AutoSearchWhat !=# 'selection'
+	    let s:normalModeAutoSearchWhat = g:AutoSearchWhat
+	    let g:AutoSearchWhat = 'selection'
 	endif
 
 	call SearchHighlighting#AutoSearchOn()
-	echomsg 'Enabled search auto-highlighting of' s:AutoSearchWhat
+	echomsg 'Enabled search auto-highlighting of' g:AutoSearchWhat
 	return 1
     endif
 endfunction
