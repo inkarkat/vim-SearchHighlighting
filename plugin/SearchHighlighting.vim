@@ -14,6 +14,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.029	06-Dec-2014	ENH: Allow tab page- and window-local Auto
+"				Search Highlighting via new
+"				:SearchAutoHighlightingTabLocal,
+"				:SearchAutoHighlightingWinLocal commands.
 "   1.22.028	13-Jun-2014	Add <Leader>* visual mode mapping.
 "				FIX: Use <Plug>SearchHighlightingAutoSearch rhs
 "				instead of duplicating the command-line.
@@ -127,6 +131,8 @@ if exists('g:loaded_SearchHighlighting') || (v:version < 700)
     finish
 endif
 let g:loaded_SearchHighlighting = 1
+let s:save_cpo = &cpo
+set cpo&vim
 
 "- configuration --------------------------------------------------------------
 
@@ -246,7 +252,32 @@ endif
 
 "- commands Auto Search Highlighting ------------------------------------------
 
-command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting if SearchHighlighting#SetAutoSearch(<f-args>) | call SearchHighlighting#AutoSearchOn() | if &hlsearch | set hlsearch | endif | else | echoerr ingo#err#Get() | endif
-command! -bar NoSearchAutoHighlighting call SearchHighlighting#AutoSearchOff() | nohlsearch
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlighting
+\   if SearchHighlighting#SetAutoSearch('g', <f-args>) |
+\       call SearchHighlighting#AutoSearchOn() |
+\       if &hlsearch | set hlsearch | endif |
+\   else | echoerr ingo#err#Get() |
+\   endif
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlightingWinLocal
+\   if SearchHighlighting#SetAutoSearch('w', <f-args>) |
+\       call SearchHighlighting#AutoSearchOn() |
+\       if &hlsearch | set hlsearch | endif |
+\   else | echoerr ingo#err#Get() |
+\   endif
+command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearchComplete SearchAutoHighlightingTabLocal
+\   if SearchHighlighting#SetAutoSearch('t', <f-args>) |
+\       call SearchHighlighting#AutoSearchOn() |
+\       if &hlsearch | set hlsearch | endif |
+\   else | echoerr ingo#err#Get() |
+\   endif
 
+command! -bar -bang NoSearchAutoHighlighting
+\   call SearchHighlighting#AutoSearchOff('g', <bang>0)
+command! -bar -bang NoSearchAutoHighlightingWinLocal
+\   call SearchHighlighting#AutoSearchOff('w', <bang>0)
+command! -bar -bang NoSearchAutoHighlightingTabLocal
+\   call SearchHighlighting#AutoSearchOff('t', <bang>0)
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
