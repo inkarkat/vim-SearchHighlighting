@@ -14,6 +14,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
+"				directly manipulating s:isSearchOn.
 "   1.50.018	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "				Wrap invocation to turn Auto Search off in
@@ -193,15 +195,15 @@ function! s:DefaultCountStar( starCommand )
     " Note: Without this self-assignment, the former search pattern is
     " highlighted!
     let @/ = @/
+    call SearchHighlighting#SearchOn()
 
-    let s:isSearchOn = 1
     " With a count, search is always on; toggling is only done without a count.
     return 1
 endfunction
 
 function! s:VisualCountStar( count, searchPattern )
     let @/ = a:searchPattern
-    let s:isSearchOn = 1
+    call SearchHighlighting#SearchOn()
 
     " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
@@ -214,7 +216,7 @@ function! s:VisualCountStar( count, searchPattern )
 endfunction
 
 function! s:OffsetStar( count, searchPattern, offsetFromEnd )
-    let s:isSearchOn = 1
+    call SearchHighlighting#SearchOn()
 
     if ! g:SearchHighlighting_NoJump || a:count
 	let l:prefix = ''
