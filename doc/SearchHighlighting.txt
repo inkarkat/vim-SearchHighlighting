@@ -123,8 +123,24 @@ g*			Toggle search highlighting for the current word
 			selection: only highlight selected text, in normal
 				   mode, nothing is selected
 						   *:NoSearchAutoHighlighting*
-:NoSearchAutoHighlighting
-			Turn off automatic highlighting.
+:NoSearchAutoHighlighting[!]
+			Turn off automatic highlighting. With [!], also turn
+			off all tab page- and window-local ones.
+
+	   *:SearchAutoHighlightingWinLocal* *:SearchAutoHighlightingTabLocal*
+:SearchAutoHighlightingWinLocal [{what}]
+:SearchAutoHighlightingTabLocal [{what}]
+			Like |:SearchAutoHighlighting|, but limit the effect
+			to the current window / tab page. Different {what}
+			occurrences can be configured for each instance.
+       *:NoSearchAutoHighlightingWinLocal* *:NoSearchAutoHighlightingTabLocal*
+:NoSearchAutoHighlightingWinLocal[!]
+:NoSearchAutoHighlightingTabLocal[!]
+			Like |:NoSearchAutoHighlighting|, but only for the
+			current window / tab page. With [!], it explicitly
+			turns off Auto Search (even if a higher scope still
+			has it active), without it, it will still consider the
+			higher scopes.
 
 ==============================================================================
 INSTALLATION				      *SearchHighlighting-installation*
@@ -182,6 +198,10 @@ IDEAS						     *SearchHighlighting-ideas*
 
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
+
+1.50	RELEASEME
+- ENH: Allow tab page- and window-local Auto Search Highlighting via new
+  :SearchAutoHighlightingTabLocal, :SearchAutoHighlightingWinLocal commands.
 
 1.22	19-Jun-2014
 - Add <Leader>* visual mode mapping that turns on auto-search only for
