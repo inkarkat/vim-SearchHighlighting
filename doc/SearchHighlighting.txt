@@ -202,6 +202,8 @@ HISTORY						   *SearchHighlighting-history*
 1.50	RELEASEME
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
   :SearchAutoHighlightingTabLocal, :SearchAutoHighlightingWinLocal commands.
+- ENH: Support v:hlsearch (available since Vim 7.4.079) via an alternative set
+  of functions that don't use the s:isSearchOn internal flag.
 
 1.22	19-Jun-2014
 - Add <Leader>* visual mode mapping that turns on auto-search only for
