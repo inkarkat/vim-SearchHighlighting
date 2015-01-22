@@ -17,6 +17,8 @@
 "   1.50.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
 "				mapping correctly by returing the :echoerr call,
 "				not 0.
+"				BUG: Off-by-one in ,* on second-to-last
+"				character.
 "   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
 "				directly manipulating s:isSearchOn.
 "				ENH: Support v:hlsearch (available since Vim
@@ -299,7 +301,7 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
     \   l:prefix,
     \   (a:count > 1 ? a:count : ''),
     \   a:searchPattern,
-    \   (a:offsetFromEnd > 1 ? -1 * a:offsetFromEnd : ''),
+    \   (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : ''),
     \   l:suffix
     \)
 endfunction
@@ -315,6 +317,7 @@ endfunction
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
     if empty(a:text)
 	if a:starCommand ==# 'c*'
+	    " Note: Different return type (command vs. success flag) for "c*".
 	    return 'echoerr "E348: No string under cursor"'
 	else
 	    call ingo#err#Set('E348: No string under cursor')
@@ -337,6 +340,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text,
 	    if strpart(a:text, len(a:text) - len(l:cwordAfterCursor)) ==# l:cwordAfterCursor
 		let l:offsetFromEnd = ingo#compat#strchars(l:cwordAfterCursor) - 1
 "****D echomsg '****' string(l:cwordAfterCursor) l:offsetFromEnd
+		" Note: Different return type (command vs. success flag) for "c*".
 		return s:OffsetStar( count, l:searchPattern, l:offsetFromEnd)
 	    endif
 	endif
