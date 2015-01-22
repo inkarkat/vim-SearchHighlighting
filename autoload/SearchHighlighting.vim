@@ -8,12 +8,15 @@
 "   - ingo/selection/frompattern.vim autoload script
 "   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2009-2014 Ingo Karkat
+" Copyright: (C) 2009-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
+"				mapping correctly by returing the :echoerr call,
+"				not 0.
 "   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
 "				directly manipulating s:isSearchOn.
 "				ENH: Support v:hlsearch (available since Vim
@@ -300,6 +303,7 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
     \   l:suffix
     \)
 endfunction
+let s:offsetPostCommand = ''
 function! SearchHighlighting#OffsetPostCommand()
     execute s:offsetPostCommand
     let s:offsetPostCommand = ''
@@ -310,8 +314,12 @@ endfunction
 " execute "normal \<Plug>SearchHighlightingStar"
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
     if empty(a:text)
-	call ingo#err#Set('E348: No string under cursor')
-	return 0
+	if a:starCommand ==# 'c*'
+	    return 'echoerr "E348: No string under cursor"'
+	else
+	    call ingo#err#Set('E348: No string under cursor')
+	    return 0
+	endif
     else
 	call ingo#err#Clear()
     endif
