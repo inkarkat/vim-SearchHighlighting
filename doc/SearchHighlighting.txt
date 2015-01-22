@@ -156,7 +156,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				      *SearchHighlighting-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.015 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.023 or
   higher.
 
 ==============================================================================
@@ -204,6 +204,7 @@ HISTORY						   *SearchHighlighting-history*
   :SearchAutoHighlightingTabLocal, :SearchAutoHighlightingWinLocal commands.
 - ENH: Support v:hlsearch (available since Vim 7.4.079) via an alternative set
   of functions that don't use the s:isSearchOn internal flag.
+  *** You need to update to ingo-library (vimscript #4433) version 1.023! ***
 
 1.22	19-Jun-2014
 - Add <Leader>* visual mode mapping that turns on auto-search only for
@@ -242,7 +243,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2014 Ingo Karkat
+Copyright: (C) 2008-2015 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
