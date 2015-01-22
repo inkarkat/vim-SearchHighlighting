@@ -16,6 +16,9 @@
 " REVISION	DATE		REMARKS
 "   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
 "				directly manipulating s:isSearchOn.
+"				ENH: Support v:hlsearch (available since Vim
+"				7.4.079) via an alternative set of functions
+"				that don't use the s:isSearchOn internal flag.
 "   1.50.018	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "				Wrap invocation to turn Auto Search off in
@@ -96,6 +99,7 @@ set cpo&vim
 
 "- Toggle hlsearch ------------------------------------------------------------
 
+if ! exists('v:hlsearch')
 " For the toggling of hlsearch, we would need to be able to query the current
 " hlsearch state from Vim. (No this is not &hlsearch, we want to know whether
 " :nohlsearch has been issued; &hlsearch is on all the time.) Since there is no
@@ -155,10 +159,6 @@ function! SearchHighlighting#ToggleHlsearch()
     return s:isSearchOn
 endfunction
 
-
-
-"- Search Highlighting --------------------------------------------------------
-
 function! s:ToggleHighlighting( searchPattern )
     if @/ == a:searchPattern && s:isSearchOn
 	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
@@ -186,6 +186,61 @@ function! s:ToggleHighlighting( searchPattern )
 
     return 1
 endfunction
+else
+function! SearchHighlighting#SearchOff()
+endfunction
+function! SearchHighlighting#SearchOn()
+endfunction
+function! SearchHighlighting#IsSearch()
+    return v:hlsearch
+endfunction
+function! SearchHighlighting#ToggleHlsearch()
+    if ! &hlsearch
+	echo 'hlsearch turned off'
+	return 0
+    elseif v:hlsearch
+	" Setting this from within a function has no effect.
+	"nohlsearch
+	echo ':nohlsearch'
+	return 0
+    else
+	" Setting this from within a function has no effect.
+	"set hlsearch
+	return 1
+    endif
+endfunction
+
+function! s:ToggleHighlighting( searchPattern )
+    if @/ == a:searchPattern && v:hlsearch
+	" Note: If simply @/ is reset, one couldn't turn search back on via 'n'
+	" / 'N'. So, just return 0 to signal to the mapping to do :nohlsearch.
+	"let @/ = ''
+
+	return 0
+    endif
+
+    let @/ = a:searchPattern
+
+    " The search pattern is added to the search history, as '/' or '*' would do.
+    call histadd('/', @/)
+
+    " To enable highlighting of the search pattern (in case it was temporarily
+    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
+    " globally set.
+    " Note: This somehow cannot be done inside the function, it must be part of
+    " the mapping!
+    "if &hlsearch
+    "    set hlsearch
+    "endif
+
+    return 1
+endfunction
+endif
+
+
+
+"- Search Highlighting --------------------------------------------------------
+
 
 function! s:DefaultCountStar( starCommand )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
