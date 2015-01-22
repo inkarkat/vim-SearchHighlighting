@@ -9,12 +9,14 @@
 "   - ingo/regexp.vim autoload script
 "   - ingo/selection.vim autoload script
 "
-" Copyright: (C) 2008-2014 Ingo Karkat
+" Copyright: (C) 2008-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.031	23-Jan-2015	FIX: Also handle error in
+"				<Plug>SearchHighlightingStar.
 "   1.50.030	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "   1.50.029	06-Dec-2014	ENH: Allow tab page- and window-local Auto
@@ -191,7 +193,7 @@ if g:SearchHighlighting_NoJump
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match.
     " gV avoids automatic re-selection of the Visual area in select mode.
-    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingo#selection#Get(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>nohlsearch<Bar>endif<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingo#selection#Get(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap * <Plug>SearchHighlightingStar
