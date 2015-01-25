@@ -15,8 +15,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"   1.50.031	23-Jan-2015	FIX: Also handle error in
+"   2.00.031	23-Jan-2015	FIX: Also handle error in
 "				<Plug>SearchHighlightingStar.
+"				Refactoring: Drop a:isWholeWordSearch from
+"				SearchHighlighting#SearchHighlightingNoJump().
+"				ENH: <A-8>, g<A-8> mappings star-like search for
+"				[whole] cWORD (instead of cword).
 "   1.50.030	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "   1.50.029	06-Dec-2014	ENH: Allow tab page- and window-local Auto
@@ -187,13 +191,13 @@ if g:SearchHighlighting_NoJump
     " [count]'th occurence.
     " <cword> selects the (key)word under or after the cursor, just like the star command.
     " If highlighting is turned on, the search pattern is echoed, just like the star command does.
-    nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-u>if SearchHighlighting#SearchHighlightingNoJump( '*', v:count, expand('<cword>'), 1)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('g*', v:count, expand('<cword>'), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingStar  :<C-u>if SearchHighlighting#SearchHighlightingNoJump( '*', v:count, expand('<cword>'))<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingGStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('g*', v:count, expand('<cword>'))<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
 
     " Highlight selected text in visual mode as search pattern, but do not jump to
     " next match.
     " gV avoids automatic re-selection of the Visual area in select mode.
-    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingo#selection#Get(), 0)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>gV
+    vnoremap <script> <silent> <Plug>SearchHighlightingStar :<C-u>if SearchHighlighting#SearchHighlightingNoJump('gv*', v:count, ingo#selection#Get())<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>gV
 
     if ! hasmapto('<Plug>SearchHighlightingStar', 'n')
 	nmap * <Plug>SearchHighlightingStar
@@ -232,10 +236,21 @@ if g:SearchHighlighting_ExtendStandardCommands
 endif
 
 
+"- mappings star-like search for cWORD -----------------------------------------
+
+nnoremap <script> <silent> <Plug>SearchHighlightingWORD  :<C-u>if SearchHighlighting#SearchHighlightingNoJump( 'W', v:count, expand('<cWORD>'))<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>SearchHighlightingGWORD :<C-u>if SearchHighlighting#SearchHighlightingNoJump('gW', v:count, expand('<cWORD>'))<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
+if ! hasmapto('<Plug>SearchHighlightingWORD', 'n')
+    nmap <A-8> <Plug>SearchHighlightingWORD
+endif
+if ! hasmapto('<Plug>SearchHighlightingGWORD', 'n')
+    nmap g<A-8> <Plug>SearchHighlightingGWORD
+endif
+
 
 "- mappings Search Current Position --------------------------------------------
 
-nnoremap <script> <silent> <Plug>SearchHighlightingCStar :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('c*', v:count, expand('<cword>'), 1)<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>SearchHighlightingCStar :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('c*', v:count, expand('<cword>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
 if ! hasmapto('<Plug>SearchHighlightingCStar', 'n')
     nmap ,* <Plug>SearchHighlightingCStar
 endif
