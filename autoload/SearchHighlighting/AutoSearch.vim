@@ -2,16 +2,18 @@
 "
 " DEPENDENCIES:
 "   - ingo/err.vim autoload script
+"   - ingo/event.vim autoload script
 "   - ingo/plugin/setting.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/register.vim autoload script
 "
-" Copyright: (C) 2009-2014 Ingo Karkat
+" Copyright: (C) 2009-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.50.019	20-Jan-2015	Use ingo#event#Trigger().
 "   1.50.018	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "   1.50.017	06-Dec-2014	Change s:AutoSearchWhat to global variable and
@@ -156,11 +158,7 @@ function! SearchHighlighting#AutoSearch#On()
 endfunction
 
 function! s:TriggerAutoSaveUpdate()
-    if v:version == 703 && has('patch438') || v:version > 703
-	doautocmd <nomodeline> SearchHighlightingAutoSearch CursorMoved
-    else
-	doautocmd              SearchHighlightingAutoSearch CursorMoved
-    endif
+    call ingo#event#Trigger('SearchHighlightingAutoSearch CursorMoved')
 endfunction
 
 function! SearchHighlighting#AutoSearch#Off( ... )
