@@ -105,8 +105,13 @@ function! s:SetLiteralSearch( prefixExpr, text, suffixExpr )
     \   a:prefixExpr . ingo#regexp#EscapeLiteralText(a:text, '/') . a:suffixExpr
     \)
 endfunction
+let s:isAutoSearch = 0
 function! s:AutoSearch( mode )
     let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
+
+    let l:isAutoSearchScopeChange = (l:isAutoSearch != s:isAutoSearch)
+    let s:isAutoSearch = l:isAutoSearch
+
     if ! l:isAutoSearch
 	call s:RestoreLastSearchPattern()
 	return 0
@@ -149,7 +154,7 @@ function! s:AutoSearch( mode )
 	endif
     endif
 
-    return 1
+    return l:isAutoSearchScopeChange
 endfunction
 function! s:GetFromScope( variableName, defaultValue )
     return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
@@ -158,8 +163,8 @@ endfunction
 function! SearchHighlighting#AutoSearch#On()
     augroup SearchHighlightingAutoSearch
 	autocmd!
-	autocmd CursorMoved  * call <SID>AutoSearch(mode())
-	autocmd CursorMovedI * call <SID>AutoSearch(mode())
+	autocmd CursorMoved  * if <SID>AutoSearch(mode()) && &hlsearch && ! SearchHighlighting#IsSearch() | call feedkeys("\<C-\>\<C-n>:set hlsearch\<CR>", 'n') | call SearchHighlighting#SearchOn() | endif
+	autocmd CursorMovedI * if <SID>AutoSearch(mode()) && &hlsearch | set hlsearch | endif
     augroup END
 
     call s:TriggerAutoSaveUpdate()
@@ -236,9 +241,10 @@ function! s:RestoreLastSearchPattern()
     " Restore the last used search pattern.
     let @/ = histget('search', -1)
 
-    " If auto-search was turned off by the star command, inform the star command
-    " that it must have turned the highlighting on, not off. (This improves the
-    " accuracy of the s:isSearchOn workaround.)
+    " If auto-search was turned off by (before executing) the star command,
+    " inform the star command that it must have turned the highlighting on, not
+    " off (by setting the search state before the star command to off). This
+    " improves the accuracy of the s:isSearchOn workaround.
     call SearchHighlighting#SearchOff()
 endfunction
 function! s:DisableHooksIfNoAutoSearchAtAll()
