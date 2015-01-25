@@ -14,11 +14,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"   1.50.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
+"   2.00.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
 "				mapping correctly by returing the :echoerr call,
 "				not 0.
 "				BUG: Off-by-one in ,* on second-to-last
 "				character.
+"				Refactoring: Drop a:isWholeWordSearch from
+"				SearchHighlighting#SearchHighlightingNoJump().
+"				ENH: Implement searching for [whole] cWORD
+"				(a:starCommand = "W" / "gW").
 "   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
 "				directly manipulating s:isSearchOn.
 "				ENH: Support v:hlsearch (available since Vim
@@ -314,7 +318,7 @@ endfunction
 " This function can also be used in other scripts, to avoid complicated
 " invocations of (and the echoing inside)
 " execute "normal \<Plug>SearchHighlightingStar"
-function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text, isWholeWordSearch )
+function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text )
     if empty(a:text)
 	if a:starCommand ==# 'c*'
 	    " Note: Different return type (command vs. success flag) for "c*".
@@ -331,7 +335,11 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text,
 	call SearchHighlighting#AutoSearch#Off()
     endif
 
-    let l:searchPattern = ingo#regexp#FromLiteralText(a:text, a:isWholeWordSearch, '/')
+    if a:starCommand ==# 'W'
+	let l:searchPattern = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(a:text, '/') . '\ze\%(\s\|$\)'
+    else
+	let l:searchPattern = ingo#regexp#FromLiteralText(a:text, (a:starCommand[0] !=# 'g'), '/')
+    endif
 
     if a:starCommand ==# 'c*'
 	let [l:startPos, l:endPos] = ingo#selection#frompattern#GetPositions('\%' . col('.') . 'c\%(\%(\k\@!.\)*\zs\k\+\|\%(\k*\|\s*\)\zs\%(\k\@!\S\)\+\)', line('.'))
@@ -366,7 +374,11 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text,
 	endif
     else
 	if a:count
-	    return s:DefaultCountStar(a:count . a:starCommand)
+	    if a:starCommand =~# 'W$'
+		return s:VisualCountStar(a:count, l:searchPattern)
+	    else
+		return s:DefaultCountStar(a:count . a:starCommand)
+	    endif
 	else
 	    return s:ToggleHighlighting(l:searchPattern)
 	endif
