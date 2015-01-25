@@ -14,6 +14,11 @@
 "
 " REVISION	DATE		REMARKS
 "   1.50.019	20-Jan-2015	Use ingo#event#Trigger().
+"				Don't show strange whitespace matches on
+"				":SearchAutoHighlighting wWORD" caused by empty
+"				\%(^\|\s\)\zs\ze\%(\s\|$\) pattern. Set
+"				completely empty pattern then. Factor out
+"				s:SetLiteralSearch().
 "   1.50.018	07-Dec-2014	Split off Auto Search stuff into separate
 "				SearchHighlighting/AutoSearch.vim.
 "   1.50.017	06-Dec-2014	Change s:AutoSearchWhat to global variable and
@@ -94,6 +99,12 @@ let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', '
 function! SearchHighlighting#AutoSearch#Complete( ArgLead, CmdLine, CursorPos )
     return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
 endfunction
+function! s:SetLiteralSearch( prefixExpr, text, suffixExpr )
+    let @/ = (empty(a:text) ?
+    \   '' :
+    \   a:prefixExpr . ingo#regexp#EscapeLiteralText(a:text, '/') . a:suffixExpr
+    \)
+endfunction
 function! s:AutoSearch( mode )
     let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
     if ! l:isAutoSearch
@@ -120,18 +131,15 @@ function! s:AutoSearch( mode )
 	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
 	if l:AutoSearchWhat ==# 'line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
-	    if ! empty(l:lineText)
-		let @/ = '^\s*' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '\s*$'
-	    endif
+	    call s:SetLiteralSearch('^\s*', l:lineText, '\s*$')
 	elseif l:AutoSearchWhat ==# 'exactline'
 	    let l:lineText = getline('.')
-	    if ! empty(l:lineText)
-		let @/ = '^' . ingo#regexp#EscapeLiteralText(l:lineText, '/') . '$'
-	    endif
+	    call s:SetLiteralSearch('^', l:lineText, '$')
 	elseif l:AutoSearchWhat ==# 'wword'
 	    let @/ = ingo#regexp#FromLiteralText(expand('<cword>'), 1, '/')
 	elseif l:AutoSearchWhat ==# 'wWORD'
-	    let @/ = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(expand('<cWORD>'), '/') . '\ze\%(\s\|$\)'
+	    let l:cWORD = expand('<cWORD>')
+	    call s:SetLiteralSearch('\%(^\|\s\)\zs', l:cWORD, '\ze\%(\s\|$\)')
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
 	elseif l:AutoSearchWhat ==# 'selection'
