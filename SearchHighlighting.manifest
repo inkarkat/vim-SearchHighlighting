@@ -1,4 +1,3 @@
-autoload/ingointegration.vim
 autoload/SearchHighlighting.vim
 plugin/SearchHighlighting.vim
 doc/SearchHighlighting.txt
