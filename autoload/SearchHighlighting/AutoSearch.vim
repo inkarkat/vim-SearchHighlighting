@@ -13,6 +13,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.00.020	26-Jan-2015	Re-enable search highlighting when switching
+"				to a window that has Auto Search. Clear search
+"				highlighting when switching from a window that
+"				has Auto Search to one that hasn't, and search
+"				highlighting was previously turned off.
 "   1.50.019	20-Jan-2015	Use ingo#event#Trigger().
 "				Don't show strange whitespace matches on
 "				":SearchAutoHighlighting wWORD" caused by empty
@@ -105,6 +110,10 @@ function! s:SetLiteralSearch( prefixExpr, text, suffixExpr )
     \   a:prefixExpr . ingo#regexp#EscapeLiteralText(a:text, '/') . a:suffixExpr
     \)
 endfunction
+function! s:GetFromScope( variableName, defaultValue )
+    return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
+endfunction
+let s:isNormalSearch = SearchHighlighting#IsSearch()
 let s:isAutoSearch = 0
 function! s:AutoSearch( mode )
     let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
@@ -114,7 +123,12 @@ function! s:AutoSearch( mode )
 
     if ! l:isAutoSearch
 	call s:RestoreLastSearchPattern()
-	return 0
+	return l:isAutoSearchScopeChange
+    elseif l:isAutoSearchScopeChange
+	" Record whether normal search highlighting was on in order to be able
+	" to restore that highlighting state when going to a window that doesn't
+	" have Auto Search on.
+	let s:isNormalSearch = SearchHighlighting#IsSearch()
     endif
 
 
@@ -156,15 +170,29 @@ function! s:AutoSearch( mode )
 
     return l:isAutoSearchScopeChange
 endfunction
-function! s:GetFromScope( variableName, defaultValue )
-    return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
+function! SearchHighlighting#AutoSearch#RestoreHighlightCommand()
+    if s:isAutoSearch && &hlsearch && ! SearchHighlighting#IsSearch()
+	call SearchHighlighting#SearchOn()
+	return 'set hlsearch'
+    elseif ! s:isAutoSearch && ! s:isNormalSearch && &hlsearch
+	call SearchHighlighting#SearchOff()
+	return 'nohlsearch'
+    else
+	return ''
+    endif
 endfunction
 
 function! SearchHighlighting#AutoSearch#On()
     augroup SearchHighlightingAutoSearch
 	autocmd!
-	autocmd CursorMoved  * if <SID>AutoSearch(mode()) && &hlsearch && ! SearchHighlighting#IsSearch() | call feedkeys("\<C-\>\<C-n>:set hlsearch\<CR>", 'n') | call SearchHighlighting#SearchOn() | endif
-	autocmd CursorMovedI * if <SID>AutoSearch(mode()) && &hlsearch | set hlsearch | endif
+	autocmd CursorMoved  *
+	\   if <SID>AutoSearch(mode()) && ! empty(SearchHighlighting#AutoSearch#RestoreHighlightCommand()) |
+	\       call feedkeys("\<C-\>\<C-n>:" . SearchHighlighting#AutoSearch#RestoreHighlightCommand() . "\<CR>", 'n') |
+	\   endif
+	autocmd CursorMovedI *
+	\   if <SID>AutoSearch(mode()) && ! empty(SearchHighlighting#AutoSearch#RestoreHighlightCommand()) |
+	\       call feedkeys("\<C-\>\<C-o>:" . SearchHighlighting#AutoSearch#RestoreHighlightCommand() . "\<CR>", 'n') |
+	\   endif
     augroup END
 
     call s:TriggerAutoSaveUpdate()
