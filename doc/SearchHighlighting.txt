@@ -94,13 +94,28 @@ g*			Toggle search highlighting for the current word
 [count]*		Search forward for the [count]'th occurrence of the
 [count]g*		word nearest to the cursor.
 {Visual}[count]*
-								       *,star*
+
+							     *ALT-8* *g_ALT-8*
+<A-8>			Toggle search highlighting for the current whole
+			\<WORD\> on/off. With [count]: Search forward for the
+			[count]'th occurrence.
+g<A-8>			Toggle search highlighting for the current WORD
+			on/off. With [count]: Search forward for the
+			[count]'th occurrence.
+					 *,star* *,g_star* *,ALT-8* *,g_ALT-8*
 [count],*		Search forward for the [count]'th occurrence of the
 			word under the cursor, keeping the cursor at the
 			current position within the word's matches (via
 			|search-offset|).
 			Observes the new non-jumping behavior of the star
 			commands without a [count].
+[count],g*		Like above: variants of the searches that keep the
+,<A-8>			cursor at the current relative match position.
+,g<A-8>			Note that if you have set |mapleader| to ",", some of
+			these would conflict with other plugin mappings; you
+			have to define|SearchHighlighting-configuration|
+			yourself.
+
 					       *<Leader>star* *v_<Leader>star*
 <Leader>*		Toggle auto-search highlighting (using the last
 			{what}; default is "wword").
@@ -165,8 +180,13 @@ CONFIGURATION				     *SearchHighlighting-configuration*
 If you want to use different mappings, map your keys to the
 <Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
 in your |vimrc|): >
-    nmap <Leader>*. <Plug>SearchHighlightingCStar
-    nmap <Leader>** <Plug>SearchHighlightingAutoSearch
+    nmap <Leader>&   <Plug>SearchHighlightingWORD
+    nmap <Leader>&&  <Plug>SearchHighlightingGWORD
+    nmap <Leader>*.  <Plug>SearchHighlightingCStar
+    nmap <Leader>**. <Plug>SearchHighlightingCGStar
+    nmap <Leader>&.  <Plug>SearchHighlightingCWORD
+    nmap <Leader>&&. <Plug>SearchHighlightingCGWORD
+    nmap <Leader>**  <Plug>SearchHighlightingAutoSearch
 <
 If you do not want the new non-jumping behavior of the star commands at all: >
     let g:SearchHighlighting_NoJump = 0
@@ -199,11 +219,28 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-1.50	RELEASEME
+2.00	RELEASEME
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
   :SearchAutoHighlightingTabLocal, :SearchAutoHighlightingWinLocal commands.
 - ENH: Support v:hlsearch (available since Vim 7.4.079) via an alternative set
   of functions that don't use the s:isSearchOn internal flag.
+- BUG: Handle "No string under cursor" for ,* mapping correctly by returing
+  the :echoerr call, not 0.
+- BUG: Off-by-one in ,* on second-to-last character.
+- ENH: <A-8>, g<A-8> mappings star-like search for [whole] cWORD (instead of
+  cword).
+- Generalize the ,* mapping to support all four variants of the * mapping
+  (whole / current, cword, cWORD), too.
+- Only define default ,* etc. mappings when the map leader isn't set to ",",
+  which would make it conflict with the <Leader>* Auto-Search mapping. Thanks
+  to Ilya Tumaykin for raising this issue.
+- Don't show strange whitespace matches on ":SearchAutoHighlighting wWORD"
+  caused by empty \%(^\|\s\)\zs\ze\%(\s\|$\) pattern. Set completely empty
+  pattern then.
+- Re-enable search highlighting when switching to a window that has Auto
+  Search. Clear search highlighting when switching from a window that has Auto
+  Search to one that hasn't, and search highlighting was previously turned
+  off.
   *** You need to update to ingo-library (vimscript #4433) version 1.023! ***
 
 1.22	19-Jun-2014
