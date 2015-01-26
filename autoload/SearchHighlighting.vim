@@ -14,6 +14,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.00.021	26-Jan-2015	Generalize "c*" to handle all combinations:
+"				"c*", "gc*", "cW", "gcW".
 "   2.00.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
 "				mapping correctly by returing the :echoerr call,
 "				not 0.
@@ -320,7 +322,7 @@ endfunction
 " execute "normal \<Plug>SearchHighlightingStar"
 function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text )
     if empty(a:text)
-	if a:starCommand ==# 'c*'
+	if a:starCommand =~# 'c'
 	    " Note: Different return type (command vs. success flag) for "c*".
 	    return 'echoerr "E348: No string under cursor"'
 	else
@@ -335,14 +337,18 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 	call SearchHighlighting#AutoSearch#Off()
     endif
 
-    if a:starCommand ==# 'W'
+    if a:starCommand =~# 'W' && a:starCommand !~# 'g'
 	let l:searchPattern = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(a:text, '/') . '\ze\%(\s\|$\)'
     else
-	let l:searchPattern = ingo#regexp#FromLiteralText(a:text, (a:starCommand[0] !=# 'g'), '/')
+	let l:searchPattern = ingo#regexp#FromLiteralText(a:text, (a:starCommand !~# 'g'), '/')
     endif
 
-    if a:starCommand ==# 'c*'
-	let [l:startPos, l:endPos] = ingo#selection#frompattern#GetPositions('\%' . col('.') . 'c\%(\%(\k\@!.\)*\zs\k\+\|\%(\k*\|\s*\)\zs\%(\k\@!\S\)\+\)', line('.'))
+    if a:starCommand =~# 'c'
+	if a:starCommand =~# 'W'
+	    let [l:startPos, l:endPos] = ingo#selection#frompattern#GetPositions('\%' . col('.') . 'c\s*\zs\S\+', line('.'))
+	else
+	    let [l:startPos, l:endPos] = ingo#selection#frompattern#GetPositions('\%' . col('.') . 'c\%(\%(\k\@!.\)*\zs\k\+\|\%(\k*\|\s*\)\zs\%(\k\@!\S\)\+\)', line('.'))
+	endif
 	if l:startPos != [0, 0]
 	    let l:cwordAfterCursor = ingo#text#Get(l:startPos, l:endPos)
 	    if strpart(a:text, len(a:text) - len(l:cwordAfterCursor)) ==# l:cwordAfterCursor
