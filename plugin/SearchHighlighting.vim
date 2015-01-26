@@ -15,6 +15,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.00.032	26-Jan-2015	Generalize the ,* mapping to support all four
+"				variants of the * mapping (whole / current,
+"				cword, cWORD), too.
+"				Only define default ,* etc. mappings when the
+"				map leader isn't set to ",", which would make it
+"				conflict with the <Leader>* Auto-Search mapping.
+"				Thanks to Ilya Tumaykin for raising this issue.
 "   2.00.031	23-Jan-2015	FIX: Also handle error in
 "				<Plug>SearchHighlightingStar.
 "				Refactoring: Drop a:isWholeWordSearch from
@@ -236,6 +243,7 @@ if g:SearchHighlighting_ExtendStandardCommands
 endif
 
 
+
 "- mappings star-like search for cWORD -----------------------------------------
 
 nnoremap <script> <silent> <Plug>SearchHighlightingWORD  :<C-u>if SearchHighlighting#SearchHighlightingNoJump( 'W', v:count, expand('<cWORD>'))<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<Bar><SID>EchoSearchPatternForward<Bar>else<Bar>if ingo#err#IsSet()<Bar>echoerr ingo#err#Get()<Bar>else<Bar>nohlsearch<Bar>endif<Bar>endif<CR>
@@ -248,12 +256,28 @@ if ! hasmapto('<Plug>SearchHighlightingGWORD', 'n')
 endif
 
 
+
 "- mappings Search Current Position --------------------------------------------
 
-nnoremap <script> <silent> <Plug>SearchHighlightingCStar :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('c*', v:count, expand('<cword>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
-if ! hasmapto('<Plug>SearchHighlightingCStar', 'n')
-    nmap ,* <Plug>SearchHighlightingCStar
+nnoremap <script> <silent> <Plug>SearchHighlightingCStar  :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('c*',  v:count, expand('<cword>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>SearchHighlightingGCStar :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('gc*', v:count, expand('<cword>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>SearchHighlightingCWORD  :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('cW',  v:count, expand('<cWORD>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>SearchHighlightingGCWORD :<C-u>execute SearchHighlighting#SearchHighlightingNoJump('gcW', v:count, expand('<cWORD>'))<Bar>call SearchHighlighting#OffsetPostCommand()<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+if ! exists('g:mapleader') || g:mapleader !=# ','
+    if ! hasmapto('<Plug>SearchHighlightingCStar', 'n')
+	nmap ,* <Plug>SearchHighlightingCStar
+    endif
+    if ! hasmapto('<Plug>SearchHighlightingGCStar', 'n')
+	nmap ,g* <Plug>SearchHighlightingGCStar
+    endif
+    if ! hasmapto('<Plug>SearchHighlightingCWORD', 'n')
+	nmap ,<A-8> <Plug>SearchHighlightingCWORD
+    endif
+    if ! hasmapto('<Plug>SearchHighlightingGCWORD', 'n')
+	nmap ,g<A-8> <Plug>SearchHighlightingGCWORD
+    endif
 endif
+
 
 
 "- mappings Auto Search Highlighting ------------------------------------------
@@ -268,6 +292,7 @@ endif
 if ! hasmapto('<Plug>SearchHighlightingAutoSearch', 'x')
     xmap <silent> <Leader>* <Plug>SearchHighlightingAutoSearch
 endif
+
 
 
 "- commands Auto Search Highlighting ------------------------------------------
