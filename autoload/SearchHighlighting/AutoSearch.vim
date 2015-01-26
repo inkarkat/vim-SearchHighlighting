@@ -162,7 +162,12 @@ function! s:AutoSearch( mode )
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
 	elseif l:AutoSearchWhat ==# 'selection'
-	    " Just search for the selected text, nothing in normal mode.
+	    if l:isAutoSearchScopeChange
+		let l:save_view = winsaveview()
+		    let @/ = ingo#selection#Get()
+		call winrestview(l:save_view)
+	    endif
+	    " Else: Just search for the selected text, nothing in normal mode.
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
 	endif
