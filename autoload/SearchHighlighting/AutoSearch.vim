@@ -115,9 +115,13 @@ function! s:GetFromScope( variableName, defaultValue )
 endfunction
 let s:isNormalSearch = SearchHighlighting#IsSearch()
 let s:isAutoSearch = 0
+let s:currentLocation = [0, 0]
 function! s:AutoSearch( mode )
-    let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
+    let l:currentLocation = [tabpagenr(), winnr()]
+    let l:isLocationChange = (l:currentLocation != s:currentLocation)
+    let s:currentLocation = l:currentLocation
 
+    let l:isAutoSearch = s:GetFromScope('AutoSearch', 0)
     let l:isAutoSearchScopeChange = (l:isAutoSearch != s:isAutoSearch)
     let s:isAutoSearch = l:isAutoSearch
 
@@ -145,6 +149,7 @@ function! s:AutoSearch( mode )
 	call ingo#register#KeepRegisterExecuteOrFunc(
 	\   'execute "normal! ' . l:captureTextCommands . '" | let @/ = ingo#regexp#EscapeLiteralText(@", "/")'
 	\)
+	let w:AutoSearch_SelectedPattern = @/
     else
 	" Search for the configured entity.
 	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
@@ -162,10 +167,8 @@ function! s:AutoSearch( mode )
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
 	elseif l:AutoSearchWhat ==# 'selection'
-	    if l:isAutoSearchScopeChange
-		let l:save_view = winsaveview()
-		    let @/ = ingo#selection#Get()
-		call winrestview(l:save_view)
+	    if l:isLocationChange && exists('w:AutoSearch_SelectedPattern')
+		let @/ = w:AutoSearch_SelectedPattern
 	    endif
 	    " Else: Just search for the selected text, nothing in normal mode.
 	else
@@ -202,7 +205,6 @@ function! SearchHighlighting#AutoSearch#On()
 
     call s:TriggerAutoSaveUpdate()
 endfunction
-
 function! s:TriggerAutoSaveUpdate()
     call ingo#event#Trigger('SearchHighlightingAutoSearch CursorMoved')
 endfunction
