@@ -241,6 +241,8 @@ HISTORY						   *SearchHighlighting-history*
   Search. Clear search highlighting when switching from a window that has Auto
   Search to one that hasn't, and search highlighting was previously turned
   off.
+- Save and restore the Auto Search pattern from a selection source when
+  updating.
   *** You need to update to ingo-library (vimscript #4433) version 1.023! ***
 
 1.22	19-Jun-2014
