@@ -13,6 +13,19 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.00.021	27-Jan-2015	Save and restore the Auto Search pattern from a
+"				selection source when updating in
+"				s:AutoSearch(). For this, the pattern has to be
+"				stored in a properly scoped variable (getting it
+"				from the current selection is unreliable with
+"				empty selections), and restored when the window
+"				has changed (tracked by a new s:currentLocation
+"				variable).
+"				Regression: Avoid triggering a feedkeys() of
+"				:set hlsearch / :nohlsearch when toggling (which
+"				clears the toggle message); the toggle mappings
+"				do that explicitly. Influence s:AutoSearch() by
+"				keeping l:isAutoSearchScopeChange false.
 "   2.00.020	26-Jan-2015	Re-enable search highlighting when switching
 "				to a window that has Auto Search. Clear search
 "				highlighting when switching from a window that
@@ -113,6 +126,9 @@ endfunction
 function! s:GetFromScope( variableName, defaultValue )
     return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
 endfunction
+function! s:GetScope( variableName )
+    return ingo#plugin#setting#GetScope(a:variableName, ['w', 't', 'g'])
+endfunction
 let s:isNormalSearch = SearchHighlighting#IsSearch()
 let s:isAutoSearch = 0
 let s:currentLocation = [0, 0]
@@ -149,7 +165,9 @@ function! s:AutoSearch( mode )
 	call ingo#register#KeepRegisterExecuteOrFunc(
 	\   'execute "normal! ' . l:captureTextCommands . '" | let @/ = ingo#regexp#EscapeLiteralText(@", "/")'
 	\)
-	let w:AutoSearch_SelectedPattern = @/
+
+	let l:scope = s:GetScope('AutoSearch')
+	execute 'let' l:scope . ':AutoSearch_SelectedPattern = @/'
     else
 	" Search for the configured entity.
 	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
@@ -167,8 +185,9 @@ function! s:AutoSearch( mode )
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
 	elseif l:AutoSearchWhat ==# 'selection'
-	    if l:isLocationChange && exists('w:AutoSearch_SelectedPattern')
-		let @/ = w:AutoSearch_SelectedPattern
+	    let l:scope = s:GetScope('AutoSearch')
+	    if l:isLocationChange && exists(l:scope . ':AutoSearch_SelectedPattern')
+		execute 'let @/ =' l:scope . ':AutoSearch_SelectedPattern'
 	    endif
 	    " Else: Just search for the selected text, nothing in normal mode.
 	else
@@ -315,6 +334,7 @@ endfunction
 
 function! SearchHighlighting#AutoSearch#Toggle( isVisualMode )
     if exists('g:AutoSearch') && g:AutoSearch
+	let s:isAutoSearch = 0  " Avoid triggering a :nohlsearch from s:AutoSearch() by keeping l:isAutoSearchScopeChange false. The command is already done by the toggle vmap.
 	call SearchHighlighting#AutoSearch#Off('g', 0)
 
 	if exists('s:normalModeAutoSearchWhat')
@@ -336,6 +356,8 @@ function! SearchHighlighting#AutoSearch#Toggle( isVisualMode )
 	return 0
     else
 	let g:AutoSearch = 1
+	let s:isAutoSearch = 1  " Avoid triggering a :set hlsearch from s:AutoSearch() by keeping l:isAutoSearchScopeChange false. The command is already done by the toggle vmap.
+
 	if a:isVisualMode && g:AutoSearchWhat !=# 'selection'
 	    let s:normalModeAutoSearchWhat = g:AutoSearchWhat
 	    let g:AutoSearchWhat = 'selection'
