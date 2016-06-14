@@ -69,6 +69,9 @@ http://vim.wikia.com/wiki/VimTip1): >
 - vim-cursorword (vimscript #5100) automatically underlines the current word
   in the current window (like :SearchAutoHighlighting), but uses :match
   instead of search
+- vim-asterisk (vimscript #5059) is quite similar, providing a z* mapping that
+  also doesn't jump, visual *, more intuitive smartcase handling, and can keep
+  the cursor position when jumping (like ,*)
 
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
