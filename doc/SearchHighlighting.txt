@@ -72,6 +72,8 @@ http://vim.wikia.com/wiki/VimTip1): >
 - vim-asterisk (vimscript #5059) is quite similar, providing a z* mapping that
   also doesn't jump, visual *, more intuitive smartcase handling, and can keep
   the cursor position when jumping (like ,*)
+- searchant.vim (vimscript #5404) hooks into the built-in search commands and
+  provides a separate highlighting for the match last jumped to.
 
 ==============================================================================
 USAGE						     *SearchHighlighting-usage*
@@ -288,7 +290,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2015 Ingo Karkat
+Copyright: (C) 2008-2016 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
