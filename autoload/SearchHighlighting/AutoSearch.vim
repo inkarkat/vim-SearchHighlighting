@@ -119,7 +119,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:AutoSearchWhat = 'wword'
-let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'line', 'line-iw', 'selection', 'selection-iw']
+let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'exactline-nw', 'line', 'line-iw', 'line-nw', 'selection', 'selection-iw', 'selection-nw']
 call ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc(s:AutoSearchWhatValues, 'SearchHighlightingAutoSearchCompleteFunc')
 function! SearchHighlighting#AutoSearch#Complete( ... )
     return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
@@ -202,8 +202,8 @@ function! s:AutoSearch( mode )
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
 	endif
-	if l:AutoSearchWhat =~# '-iw$'
-	    let l:flexibleWhitespaceAndCommentPrefixPattern = ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(0)
+	if l:AutoSearchWhat =~# '-[in]w$'
+	    let l:flexibleWhitespaceAndCommentPrefixPattern = ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(l:AutoSearchWhat =~# 'nw')
 	    let @/ = substitute(@/, l:flexibleWhitespaceAndCommentPrefixPattern, escape(l:flexibleWhitespaceAndCommentPrefixPattern, '\'), 'g')
 	endif
     endif
