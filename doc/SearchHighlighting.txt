@@ -145,6 +145,15 @@ g<A-8>			Toggle search highlighting for the current WORD
 			exactline: exact current line
 			selection: only highlight selected text, in normal
 				   mode, nothing is selected
+			*-iw:      allow for variations in whitespace (also
+				   newline characters, i.e. allow a match
+				   distributed over multiple lines), and
+				   ignore any comment prefixes (e.g. /*, #),
+				   too.
+			*-nw:	   allow for variations in whitespace and also
+				   direct concatenation of lines (i.e. without
+				   any whitespace in between)
+
 						   *:NoSearchAutoHighlighting*
 :NoSearchAutoHighlighting[!]
 			Turn off automatic highlighting. With [!], also turn
@@ -179,7 +188,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				      *SearchHighlighting-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.023 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.030 or
   higher.
 
 ==============================================================================
@@ -227,7 +236,12 @@ IDEAS						     *SearchHighlighting-ideas*
 ==============================================================================
 HISTORY						   *SearchHighlighting-history*
 
-2.00	RELEASEME
+2.01	RELEASEME
+- ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
+  ignoring whitespace differences / and no whitespace.
+  *** You need to update to ingo-library (vimscript #4433) version 1.030! ***
+
+2.00	27-Jan-2017
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
   :SearchAutoHighlightingTabLocal, :SearchAutoHighlightingWinLocal commands.
 - ENH: Support v:hlsearch (available since Vim 7.4.079) via an alternative set
@@ -290,7 +304,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2016 Ingo Karkat
+Copyright: (C) 2008-2017 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
