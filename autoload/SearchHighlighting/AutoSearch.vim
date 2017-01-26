@@ -1,6 +1,7 @@
 " SearchHighlighting/AutoSearch.vim: Auto-highlighting of the stuff under the cursor.
 "
 " DEPENDENCIES:
+"   - ingo/collections/fromsplit.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/event.vim autoload script
 "   - ingo/plugin/cmdcomplete.vim autoload script
@@ -15,8 +16,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"   2.01.023	27-Jan-2017	ENH: Add exactline-iw, line-iw, selection-iw
-"				variants that match ignoring whitespace differences.
+"   2.01.023	27-Jan-2017	ENH: Add ...-iw / ...-nw variants of
+"				exactline, line, selection that match ignoring
+"				whitespace differences / and no whitespace.
 "   2.00.022	09-Feb-2015	Refactoring: Use
 "				ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc().
 "   2.00.021	27-Jan-2015	Save and restore the Auto Search pattern from a
@@ -124,11 +126,29 @@ call ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc(s:AutoSearchWhatValues, '
 function! SearchHighlighting#AutoSearch#Complete( ... )
     return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
 endfunction
-function! s:SetLiteralSearch( prefixExpr, text, suffixExpr )
-    let @/ = (empty(a:text) ?
-    \   '' :
-    \   a:prefixExpr . ingo#regexp#EscapeLiteralText(a:text, '/') . a:suffixExpr
-    \)
+function! s:SetLiteralSearch( prefixExpr, text, suffixExpr, AutoSearchWhat )
+    if a:AutoSearchWhat =~# '-[in]w$'
+	let l:flexibleWhitespaceAndCommentPrefixPattern = ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(a:AutoSearchWhat =~# 'nw')
+
+	" Note: When splitting, need to always use isAllowEmpty = 0, as the
+	" algorithm requires non-empty separators (and we don't want to allow
+	" whitespace between any character, just optional whitespace where
+	" there's currently some).
+	let @/ = join(
+	\   ingo#collections#fromsplit#MapItemsAndSeparators(
+	\       a:text,
+	\       ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(0),
+	\       'ingo#regexp#EscapeLiteralText(v:val, "/")',
+	\       string(l:flexibleWhitespaceAndCommentPrefixPattern)
+	\   ),
+	\   ''
+	\)
+    else
+	let @/ = (empty(a:text) ?
+	\   '' :
+	\   a:prefixExpr . ingo#regexp#EscapeLiteralText(a:text, '/') . a:suffixExpr
+	\)
+    endif
 endfunction
 function! s:GetFromScope( variableName, defaultValue )
     return ingo#plugin#setting#GetFromScope(a:variableName, ['w', 't', 'g'], a:defaultValue)
@@ -169,42 +189,33 @@ function! s:AutoSearch( mode )
 	    let l:captureTextCommands = "\<C-g>" . l:captureTextCommands . "\<C-g>"
 	endif
 
-	call ingo#register#KeepRegisterExecuteOrFunc(
-	\   'execute "normal! ' . l:captureTextCommands . '" | let @/ = ingo#regexp#EscapeLiteralText(@", "/")'
-	\)
-
 	let l:scope = s:GetScope('AutoSearch')
-	execute 'let' l:scope . ':AutoSearch_SelectedPattern = @/'
+	call ingo#register#KeepRegisterExecuteOrFunc(
+	\   'execute "normal! ' . l:captureTextCommands . '" | let ' . l:scope . ':AutoSearch_SelectedText = @" | let @/ = ingo#regexp#EscapeLiteralText(@", "/")'
+	\)
     else
 	" Search for the configured entity.
 	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
 	if l:AutoSearchWhat =~# '^line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
-	    call s:SetLiteralSearch('^\s*', l:lineText, '\s*$')
+	    call s:SetLiteralSearch('^\s*', l:lineText, '\s*$', l:AutoSearchWhat)
 	elseif l:AutoSearchWhat =~# '^exactline'
-	    let l:lineText = getline('.')
-	    call s:SetLiteralSearch('^', l:lineText, '$')
+	    call s:SetLiteralSearch('^', getline('.'), '$', l:AutoSearchWhat)
 	elseif l:AutoSearchWhat ==# 'wword'
 	    let @/ = ingo#regexp#FromLiteralText(expand('<cword>'), 1, '/')
 	elseif l:AutoSearchWhat ==# 'wWORD'
 	    let l:cWORD = expand('<cWORD>')
-	    call s:SetLiteralSearch('\%(^\|\s\)\zs', l:cWORD, '\ze\%(\s\|$\)')
+	    call s:SetLiteralSearch('\%(^\|\s\)\zs', l:cWORD, '\ze\%(\s\|$\)', l:AutoSearchWhat)
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
 	elseif l:AutoSearchWhat =~# '^selection'
 	    let l:scope = s:GetScope('AutoSearch')
-	    if l:isLocationChange && exists(l:scope . ':AutoSearch_SelectedPattern')
-		execute 'let @/ =' l:scope . ':AutoSearch_SelectedPattern'
-	    else
-		" Else: Just search for the selected text, nothing in normal mode.
-		return l:isAutoSearchScopeChange    " Need to return early here to avoid the reprocessing of @/ for the -iw suffix.
+	    if l:isLocationChange && exists(l:scope . ':AutoSearch_SelectedText')
+		execute 'call s:SetLiteralSearch("", ' l:scope . ':AutoSearch_SelectedText, "", l:AutoSearchWhat)'
 	    endif
+		" Else: Just search for the selected text, nothing in normal mode.
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
-	endif
-	if l:AutoSearchWhat =~# '-[in]w$'
-	    let l:flexibleWhitespaceAndCommentPrefixPattern = ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(l:AutoSearchWhat =~# 'nw')
-	    let @/ = substitute(@/, l:flexibleWhitespaceAndCommentPrefixPattern, escape(l:flexibleWhitespaceAndCommentPrefixPattern, '\'), 'g')
 	endif
     endif
 
