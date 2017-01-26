@@ -3,6 +3,7 @@
 " DEPENDENCIES:
 "   - ingo/err.vim autoload script
 "   - ingo/event.vim autoload script
+"   - ingo/plugin/cmdcomplete.vim autoload script
 "   - ingo/plugin/setting.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/register.vim autoload script
@@ -13,6 +14,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.00.022	09-Feb-2015	Refactoring: Use
+"				ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc().
 "   2.00.021	27-Jan-2015	Save and restore the Auto Search pattern from a
 "				selection source when updating in
 "				s:AutoSearch(). For this, the pattern has to be
@@ -114,8 +117,9 @@ set cpo&vim
 
 let g:AutoSearchWhat = 'wword'
 let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line', 'selection']
-function! SearchHighlighting#AutoSearch#Complete( ArgLead, CmdLine, CursorPos )
-    return filter(copy(s:AutoSearchWhatValues), 'v:val =~# "\\V" . escape(a:ArgLead, "\\")')
+call ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc(s:AutoSearchWhatValues, 'SearchHighlightingAutoSearchCompleteFunc')
+function! SearchHighlighting#AutoSearch#Complete( ... )
+    return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
 endfunction
 function! s:SetLiteralSearch( prefixExpr, text, suffixExpr )
     let @/ = (empty(a:text) ?
