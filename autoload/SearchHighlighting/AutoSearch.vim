@@ -6,14 +6,17 @@
 "   - ingo/plugin/cmdcomplete.vim autoload script
 "   - ingo/plugin/setting.vim autoload script
 "   - ingo/regexp.vim autoload script
+"   - ingo/regexp/comments.vim autoload script
 "   - ingo/register.vim autoload script
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   2.01.023	27-Jan-2017	ENH: Add exactline-iw, line-iw, selection-iw
+"				variants that match ignoring whitespace differences.
 "   2.00.022	09-Feb-2015	Refactoring: Use
 "				ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc().
 "   2.00.021	27-Jan-2015	Save and restore the Auto Search pattern from a
@@ -116,7 +119,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:AutoSearchWhat = 'wword'
-let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'line', 'selection']
+let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'line', 'line-iw', 'selection', 'selection-iw']
 call ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc(s:AutoSearchWhatValues, 'SearchHighlightingAutoSearchCompleteFunc')
 function! SearchHighlighting#AutoSearch#Complete( ... )
     return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
@@ -175,10 +178,10 @@ function! s:AutoSearch( mode )
     else
 	" Search for the configured entity.
 	let l:AutoSearchWhat = s:GetFromScope('AutoSearchWhat', 'wword')
-	if l:AutoSearchWhat ==# 'line'
+	if l:AutoSearchWhat =~# '^line'
 	    let l:lineText = substitute(getline('.'), '^\s*\(.\{-}\)\s*$', '\1', '')
 	    call s:SetLiteralSearch('^\s*', l:lineText, '\s*$')
-	elseif l:AutoSearchWhat ==# 'exactline'
+	elseif l:AutoSearchWhat =~# '^exactline'
 	    let l:lineText = getline('.')
 	    call s:SetLiteralSearch('^', l:lineText, '$')
 	elseif l:AutoSearchWhat ==# 'wword'
@@ -188,14 +191,20 @@ function! s:AutoSearch( mode )
 	    call s:SetLiteralSearch('\%(^\|\s\)\zs', l:cWORD, '\ze\%(\s\|$\)')
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
-	elseif l:AutoSearchWhat ==# 'selection'
+	elseif l:AutoSearchWhat =~# '^selection'
 	    let l:scope = s:GetScope('AutoSearch')
 	    if l:isLocationChange && exists(l:scope . ':AutoSearch_SelectedPattern')
 		execute 'let @/ =' l:scope . ':AutoSearch_SelectedPattern'
+	    else
+		" Else: Just search for the selected text, nothing in normal mode.
+		return l:isAutoSearchScopeChange    " Need to return early here to avoid the reprocessing of @/ for the -iw suffix.
 	    endif
-	    " Else: Just search for the selected text, nothing in normal mode.
 	else
 	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
+	endif
+	if l:AutoSearchWhat =~# '-iw$'
+	    let l:flexibleWhitespaceAndCommentPrefixPattern = ingo#regexp#comments#GetFlexibleWhitespaceAndCommentPrefixPattern(0)
+	    let @/ = substitute(@/, l:flexibleWhitespaceAndCommentPrefixPattern, escape(l:flexibleWhitespaceAndCommentPrefixPattern, '\'), 'g')
 	endif
     endif
 
