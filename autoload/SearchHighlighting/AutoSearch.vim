@@ -1,6 +1,7 @@
 " SearchHighlighting/AutoSearch.vim: Auto-highlighting of the stuff under the cursor.
 "
 " DEPENDENCIES:
+"   - SearchHighlighting.vim autoload script
 "   - ingo/collections/fromsplit.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/event.vim autoload script
@@ -9,6 +10,7 @@
 "   - ingo/regexp.vim autoload script
 "   - ingo/regexp/comments.vim autoload script
 "   - ingo/register.vim autoload script
+"   - SearchRepeat.vim autoload script (optional)
 "
 " Copyright: (C) 2009-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -115,6 +117,10 @@ function! s:AutoSearch( mode )
 	    throw 'ASSERT: Unknown search entity ' . string(l:AutoSearchWhat)
 	endif
     endif
+
+    " Inform SearchRepeat.vim that this change was "automatic", not initiated by
+    " the user, so that the repeated search does not revert to standard search.
+    silent! call SearchRepeat#UpdateLastSearchPattern()
 
     return l:isAutoSearchScopeChange
 endfunction

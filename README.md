@@ -243,6 +243,10 @@ HISTORY
   ignoring whitespace differences / and no whitespace.
 - Trigger LastSearchPatternChanged User event to notify other plugins (e.g. my
   SearchRepeat.vim plugin ([vimscript #4949](http://www.vim.org/scripts/script.php?script_id=4949))) of the change of register /.
+- :SearchAutoHighlighting commands inform the SearchRepeat.vim plugin that the
+  change in register / is automatic, not initiated by the user, so that the
+  current custom search is kept active instead of reverting back to standard
+  search.
   __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.030!__
 
 ##### 2.00    27-Jan-2017
