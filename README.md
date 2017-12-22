@@ -48,7 +48,7 @@ http://vim.wikia.com/wiki/VimTip1):
 
     map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 
-- highlight_word_under_cursor.vim ([vimscript #4287](http://www.vim.org/scripts/script.php?script_id=4287)) implements the search
+- highlight\_word\_under\_cursor.vim ([vimscript #4287](http://www.vim.org/scripts/script.php?script_id=4287)) implements the search
   auto-highlighting of the whole and optionally current word.
 - HiCursorWords ([vimscript #4306](http://www.vim.org/scripts/script.php?script_id=4306)) highlights the word under the cursor, with
   optional delay and limited to certain syntax groups.
@@ -194,7 +194,7 @@ CONFIGURATION
 ------------------------------------------------------------------------------
 
 If you want to use different mappings, map your keys to the
- Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
+<Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
 in your vimrc):
 
     nmap <Leader>&   <Plug>SearchHighlightingWORD
@@ -241,6 +241,8 @@ HISTORY
 ##### 2.01    RELEASEME
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
   ignoring whitespace differences / and no whitespace.
+- Trigger LastSearchPatternChanged User event to notify other plugins (e.g. my
+  SearchRepeat.vim plugin ([vimscript #4949](http://www.vim.org/scripts/script.php?script_id=4949))) of the change of register /.
   __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.030!__
 
 ##### 2.00    27-Jan-2017

@@ -9,7 +9,7 @@
 "   - ingo/regexp.vim autoload script
 "   - ingo/selection.vim autoload script
 "
-" Copyright: (C) 2008-2015 Ingo Karkat
+" Copyright: (C) 2008-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -232,10 +232,10 @@ if g:SearchHighlighting_ExtendStandardCommands
     " explicitly echo the search pattern.
     "
     " The star command must come first so that it receives the optional [count].
-    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar   *:call SearchHighlighting#AutoSearch#Off()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGStar g*:call SearchHighlighting#AutoSearch#Off()<Bar><SID>EchoSearchPatternForward<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash   #:call SearchHighlighting#AutoSearch#Off()<Bar><SID>EchoSearchPatternBackward<CR>
-    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGHash g#:call SearchHighlighting#AutoSearch#Off()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar   *:call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGStar g*:call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar><SID>EchoSearchPatternForward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash   #:call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar><SID>EchoSearchPatternBackward<CR>
+    nnoremap <script> <silent> <Plug>SearchHighlightingExtendedGHash g#:call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar><SID>EchoSearchPatternBackward<CR>
     nmap * <Plug>SearchHighlightingExtendedStar
     nmap g* <Plug>SearchHighlightingExtendedGStar
     nmap # <Plug>SearchHighlightingExtendedHash
@@ -245,10 +245,10 @@ if g:SearchHighlighting_ExtendStandardCommands
     nnoremap <expr> <SID>(SearchForwardWithCount)  (v:count ? v:count : '') . '/'
     nnoremap <expr> <SID>(SearchBackwardWithCount) (v:count ? v:count : '') . '?'
     vnoremap <script> <silent> <Plug>SearchHighlightingExtendedStar
-    \ :<C-u>call SearchHighlighting#AutoSearch#Off()<CR><SID>(SearchForwardWithCount)
+    \ :<C-u>call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<CR><SID>(SearchForwardWithCount)
     \<C-r><C-r>=ingo#regexp#FromLiteralText(ingo#selection#Get(), 0, '/')<CR><CR>:<SID>EchoSearchPatternForward<CR>gV
     vnoremap <script> <silent> <Plug>SearchHighlightingExtendedHash
-    \ :<C-u>call SearchHighlighting#AutoSearch#Off()<CR><SID>(SearchBackwardWithCount)
+    \ :<C-u>call SearchHighlighting#AutoSearch#Off()<Bar>call SearchHighlighting#LastSearchPatternChanged()<CR><SID>(SearchBackwardWithCount)
     \<C-r><C-r>=ingo#regexp#FromLiteralText(ingo#selection#Get(), 0, '?')<CR><CR>:<SID>EchoSearchPatternBackward<CR>gV
     xmap * <Plug>SearchHighlightingExtendedStar
     xmap # <Plug>SearchHighlightingExtendedHash
@@ -303,10 +303,10 @@ endif
 "- mappings Auto Search Highlighting ------------------------------------------
 
 nnoremap <silent> <Plug>SearchHighlightingAutoSearch
-\ :<C-u>if SearchHighlighting#AutoSearch#Toggle(0)<Bar>
+\ :<C-u>if SearchHighlighting#AutoSearch#Toggle(0)<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar>
 \if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 vnoremap <silent> <Plug>SearchHighlightingAutoSearch
-\ :<C-u>if SearchHighlighting#AutoSearch#Toggle(1)<Bar>let @/ = ingo#regexp#EscapeLiteralText(ingo#selection#Get(), '/')<Bar>
+\ :<C-u>if SearchHighlighting#AutoSearch#Toggle(1)<Bar>call SearchHighlighting#LastSearchPatternChanged()<Bar>let @/ = ingo#regexp#EscapeLiteralText(ingo#selection#Get(), '/')<Bar>
 \if &hlsearch<Bar>set hlsearch<Bar>endif<Bar>else<Bar>nohlsearch<Bar>endif<CR>
 " Note: Need to set the last search pattern to the selected text here, as this
 " cannot be done inside the function.
@@ -324,18 +324,21 @@ endif
 command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearch#Complete SearchAutoHighlighting
 \   if SearchHighlighting#AutoSearch#Set('g', <f-args>) |
 \       call SearchHighlighting#AutoSearch#On() |
+\       call SearchHighlighting#LastSearchPatternChanged() |
 \       if &hlsearch | set hlsearch | endif |
 \   else | echoerr ingo#err#Get() |
 \   endif
 command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearch#Complete SearchAutoHighlightingWinLocal
 \   if SearchHighlighting#AutoSearch#Set('w', <f-args>) |
 \       call SearchHighlighting#AutoSearch#On() |
+\       call SearchHighlighting#LastSearchPatternChanged() |
 \       if &hlsearch | set hlsearch | endif |
 \   else | echoerr ingo#err#Get() |
 \   endif
 command! -bar -nargs=? -complete=customlist,SearchHighlighting#AutoSearch#Complete SearchAutoHighlightingTabLocal
 \   if SearchHighlighting#AutoSearch#Set('t', <f-args>) |
 \       call SearchHighlighting#AutoSearch#On() |
+\       call SearchHighlighting#LastSearchPatternChanged() |
 \       if &hlsearch | set hlsearch | endif |
 \   else | echoerr ingo#err#Get() |
 \   endif

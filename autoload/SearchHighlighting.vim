@@ -4,12 +4,13 @@
 "   - SearchHighlighting/AutoSearch.vim autoload script
 "   - ingo/compat.vim autoload script
 "   - ingo/err.vim autoload script
+"   - ingo/event.vim autoload script
 "   - ingo/regexp.vim autoload script
 "   - ingo/register.vim autoload script
 "   - ingo/selection/frompattern.vim autoload script
 "   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -109,6 +110,11 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! SearchHighlighting#LastSearchPatternChanged()
+    call ingo#event#TriggerCustom('LastSearchPatternChanged')
+endfunction
+
+
 "- Toggle hlsearch ------------------------------------------------------------
 
 if ! exists('v:hlsearch')
@@ -187,6 +193,8 @@ function! s:ToggleHighlighting( searchPattern )
     " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
 
+    call SearchHighlighting#LastSearchPatternChanged()
+
     " To enable highlighting of the search pattern (in case it was temporarily
     " turned off via :nohlsearch), we :set hlsearch, but only if that option is
     " globally set.
@@ -236,6 +244,8 @@ function! s:ToggleHighlighting( searchPattern )
     " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
 
+    call SearchHighlighting#LastSearchPatternChanged()
+
     " To enable highlighting of the search pattern (in case it was temporarily
     " turned off via :nohlsearch), we :set hlsearch, but only if that option is
     " globally set.
@@ -253,7 +263,6 @@ endif
 
 "- Search Highlighting --------------------------------------------------------
 
-
 function! s:DefaultCountStar( starCommand )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'.
@@ -264,6 +273,8 @@ function! s:DefaultCountStar( starCommand )
     let @/ = @/
     call SearchHighlighting#SearchOn()
 
+    call SearchHighlighting#LastSearchPatternChanged()
+
     " With a count, search is always on; toggling is only done without a count.
     return 1
 endfunction
@@ -271,6 +282,8 @@ endfunction
 function! s:VisualCountStar( count, searchPattern )
     let @/ = a:searchPattern
     call SearchHighlighting#SearchOn()
+
+    call SearchHighlighting#LastSearchPatternChanged()
 
     " The search pattern is added to the search history, as '/' or '*' would do.
     call histadd('/', @/)
@@ -314,6 +327,7 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 endfunction
 let s:offsetPostCommand = ''
 function! SearchHighlighting#OffsetPostCommand()
+    call SearchHighlighting#LastSearchPatternChanged()
     execute s:offsetPostCommand
     let s:offsetPostCommand = ''
 endfunction
