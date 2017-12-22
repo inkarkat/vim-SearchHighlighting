@@ -114,6 +114,15 @@ function! SearchHighlighting#LastSearchPatternChanged()
     call ingo#event#TriggerCustom('LastSearchPatternChanged')
 endfunction
 
+function! s:SetSearchPatternAndHistory( searchPattern )
+    let @/ = a:searchPattern
+
+    " The search pattern is added to the search history, as '/' or '*' would do.
+    call histadd('/', @/)
+
+    call SearchHighlighting#LastSearchPatternChanged()
+endfunction
+
 
 "- Toggle hlsearch ------------------------------------------------------------
 
@@ -187,23 +196,8 @@ function! s:ToggleHighlighting( searchPattern )
 	return 0
     endif
 
-    let @/ = a:searchPattern
     let s:isSearchOn = 1
-
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
-
-    call SearchHighlighting#LastSearchPatternChanged()
-
-    " To enable highlighting of the search pattern (in case it was temporarily
-    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set.
-    " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping!
-    "if &hlsearch
-    "    set hlsearch
-    "endif
-
+    call s:SetSearchPatternAndHistory(a:searchPattern)
     return 1
 endfunction
 else
@@ -239,22 +233,7 @@ function! s:ToggleHighlighting( searchPattern )
 	return 0
     endif
 
-    let @/ = a:searchPattern
-
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
-
-    call SearchHighlighting#LastSearchPatternChanged()
-
-    " To enable highlighting of the search pattern (in case it was temporarily
-    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set.
-    " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping!
-    "if &hlsearch
-    "    set hlsearch
-    "endif
-
+    call s:SetSearchPatternAndHistory(a:searchPattern)
     return 1
 endfunction
 endif
@@ -280,13 +259,9 @@ function! s:DefaultCountStar( starCommand )
 endfunction
 
 function! s:VisualCountStar( count, searchPattern )
-    let @/ = a:searchPattern
     call SearchHighlighting#SearchOn()
 
-    call SearchHighlighting#LastSearchPatternChanged()
-
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
+    call s:SetSearchPatternAndHistory(a:searchPattern)
 
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'.
