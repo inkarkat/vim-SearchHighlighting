@@ -135,17 +135,22 @@ USAGE
                             cWORD: current WORD under cursor
                             line:  current text in line, excluding indent and
                                    trailing whitespace
-                            exactline: exact current line
-                            selection: only highlight selected text, in normal
-                                       mode, nothing is selected
-                            *-iw:      allow for variations in whitespace (also
-                                       newline characters, i.e. allow a match
-                                       distributed over multiple lines), and
-                                       ignore any comment prefixes (e.g. /*, #),
-                                       too.
-                            *-nw:      allow for variations in whitespace and also
-                                       direct concatenation of lines (i.e. without
-                                       any whitespace in between)
+                            exactline:  exact current line
+                            from-cursor:only consider the text from the beginning
+                                        of the line up to the cursor; ignore text
+                                        before the cursor
+                            to-cursor:  only consider the text from the cursor to
+                                        the end of the line
+                            selection:  only highlight selected text, in normal
+                                        mode, nothing is selected
+                            *-iw:       allow for variations in whitespace (also
+                                        newline characters, i.e. allow a match
+                                        distributed over multiple lines), and
+                                        ignore any comment prefixes (e.g. /*, #),
+                                        too.
+                            *-nw:       allow for variations in whitespace and also
+                                        direct concatenation of lines (i.e. without
+                                        any whitespace in between)
 
     :NoSearchAutoHighlighting[!]
                             Turn off automatic highlighting. With [!], also turn
@@ -247,6 +252,8 @@ HISTORY
   change in register / is automatic, not initiated by the user, so that the
   current custom search is kept active instead of reverting back to standard
   search.
+- ENH: Add from-cursor and to-cursor (and -iw, -nw variants) for
+  :SearchAutoHighlighting.
   __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.030!__
 
 ##### 2.00    27-Jan-2017
@@ -312,7 +319,7 @@ HISTORY
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2017 Ingo Karkat -
+Copyright: (C) 2008-2018 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat <ingo@karkat.de>
