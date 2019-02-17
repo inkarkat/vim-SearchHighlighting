@@ -199,7 +199,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				     *SearchHighlighting-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.030 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.036 or
   higher.
 
 ==============================================================================
@@ -264,7 +264,7 @@ HISTORY						  *SearchHighlighting-history*
   search.
 - ENH: Add from-cursor and to-cursor (and -iw, -nw variants) for
   :SearchAutoHighlighting.
-  *** You need to update to ingo-library (vimscript #4433) version 1.030! ***
+  *** You need to update to ingo-library (vimscript #4433) version 1.036! ***
 
 2.00	27-Jan-2017
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
@@ -329,7 +329,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2018 Ingo Karkat
+Copyright: (C) 2008-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

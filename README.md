@@ -1,4 +1,4 @@
-SEARCH HIGHLIGHTING   
+SEARCH HIGHLIGHTING
 ===============================================================================
 _by Ingo Karkat_
 
@@ -192,7 +192,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.030 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.036 or
   higher.
 
 CONFIGURATION
@@ -254,7 +254,8 @@ HISTORY
   search.
 - ENH: Add from-cursor and to-cursor (and -iw, -nw variants) for
   :SearchAutoHighlighting.
-  __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.030!__
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.036!__
 
 ##### 2.00    27-Jan-2017
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
@@ -280,7 +281,8 @@ HISTORY
   off.
 - Save and restore the Auto Search pattern from a selection source when
   updating.
-  __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.023!__
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.023!__
 
 ##### 1.22    19-Jun-2014
 - Add <Leader>\* visual mode mapping that turns on auto-search only for
@@ -297,7 +299,9 @@ HISTORY
   when jumping to subsequent matches.
 - Correctly emulate \* behavior on whitespace-only lines where there's no
   cword: Issue "E348: No string under cursor".
-- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)). __You need to separately
+- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)).
+
+__You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.015 (or higher)!__
 
 ##### 1.10    19-Jan-2013 (unreleased)
@@ -319,7 +323,7 @@ HISTORY
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2018 Ingo Karkat -
+Copyright: (C) 2008-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat <ingo@karkat.de>

@@ -10,7 +10,7 @@
 "   - ingo/selection/frompattern.vim autoload script
 "   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2009-2017 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -235,7 +235,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
     endif
 
     if a:starCommand =~# 'W' && a:starCommand !~# 'g'
-	let l:searchPattern = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(a:text, '/') . '\ze\%(\s\|$\)'
+	let l:searchPattern = ingo#regexp#MakeWholeWORDSearch(a:text, ingo#regexp#EscapeLiteralText(a:text, '/'))
     else
 	let l:searchPattern = ingo#regexp#FromLiteralText(a:text, (a:starCommand !~# 'g'), '/')
     endif
