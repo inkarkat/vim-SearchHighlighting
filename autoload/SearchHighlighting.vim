@@ -252,7 +252,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 		let l:offsetFromEnd = ingo#compat#strchars(l:cwordAfterCursor) - 1
 "****D echomsg '****' string(l:cwordAfterCursor) l:offsetFromEnd
 		" Note: Different return type (command vs. success flag) for "c*".
-		return s:OffsetStar( count, l:searchPattern, l:offsetFromEnd)
+		return s:OffsetStar(a:count, l:searchPattern, l:offsetFromEnd)
 	    endif
 	endif
 	return 'echoerr "E348: No string under cursor"'
