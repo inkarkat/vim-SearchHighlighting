@@ -288,6 +288,9 @@ endfunction
 
 function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
     let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackwards)
+    if ! l:isFound
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards)
+    endif
 
     if l:isFound
 	call SearchHighlighting#SearchOn()
@@ -296,19 +299,34 @@ function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
 	return 'echoerr printf("Could not find a match for %s nearby", @/)'
     endif
 endfunction
+function! s:GetOffset( isBackwards, match ) abort
+    let l:here = getpos('.')[1:2]
+    let l:referencePos = (a:isBackwards ? a:match[0] : a:match[1])
+    let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, l:here]))
+    let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
+    return (l:offsetFromReference == 0 ?
+    \   '' :
+    \   (a:isBackwards ? 's' : 'e') . string((ingo#pos#IsBefore(l:here, l:referencePos) ? -1 : 1) * l:offsetFromReference)
+    \)
+endfunction
 function! s:GetOffsetFromInsideMatch( isBackwards ) abort
     let [l:startPos, l:endPos] = ingo#area#frompattern#GetAroundHere(@/)
     if l:startPos != [0, 0]
-	let l:referencePos = (a:isBackwards ? l:endPos : l:startPos)
-	let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, getpos('.')[1:2]]))
-	let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
-	let l:offset = (l:offsetFromReference > 0 ?
-	\   (a:isBackwards ? 'e-' : 's+') . l:offsetFromReference :
-	\   ''
-	\)
-	return [1, l:offset]
+	return [1, s:GetOffset(a:isBackwards, [l:startPos, l:endPos])]
     endif
     return [0, '']
+endfunction
+function! s:GetOffsetFromSameLine( isBackwards ) abort
+    let l:thisLnum = line('.')
+    let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+    if empty(l:matches)
+	return [0, '']
+    elseif len(l:matches) == 1
+	return [1, s:GetOffset(a:isBackwards, l:matches[0])]
+    else
+	" TODO
+	return [0, '']
+    endif
 endfunction
 
 let &cpo = s:save_cpo
