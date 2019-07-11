@@ -289,7 +289,7 @@ endfunction
 function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
     let [l:isFound, l:offset, l:matchesInThisLine] = s:GetOffsetFromInsideMatch(a:isBackwards)
     if ! l:isFound
-	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards)
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards, l:matchesInThisLine)
     endif
 
     if l:isFound
@@ -328,9 +328,14 @@ function! s:GetOffsetFromInsideMatch( isBackwards ) abort
 
     return [1, s:GetOffset(a:isBackwards, l:match), l:matchesInThisLine]
 endfunction
-function! s:GetOffsetFromSameLine( isBackwards ) abort
-    let l:thisLnum = line('.')
-    let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+function! s:GetOffsetFromSameLine( isBackwards, matchesInThisLine ) abort
+    if empty(a:matchesInThisLine)
+	let l:thisLnum = line('.')
+	let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+    else
+	let l:matches = a:matchesInThisLine
+    endif
+
     if empty(l:matches)
 	return [0, '']
     elseif len(l:matches) == 1
