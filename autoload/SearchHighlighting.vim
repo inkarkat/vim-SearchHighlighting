@@ -287,6 +287,16 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 endfunction
 
 function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
+    let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackwards)
+
+    if l:isFound
+	call SearchHighlighting#SearchOn()
+	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
+    else
+	return 'echoerr printf("Could not find a match for %s nearby", @/)'
+    endif
+endfunction
+function! s:GetOffsetFromInsideMatch( isBackwards ) abort
     let [l:startPos, l:endPos] = ingo#area#frompattern#GetAroundHere(@/)
     if l:startPos != [0, 0]
 	let l:referencePos = (a:isBackwards ? l:endPos : l:startPos)
@@ -296,11 +306,9 @@ function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
 	\   (a:isBackwards ? 'e-' : 's+') . l:offsetFromReference :
 	\   ''
 	\)
-
-	call SearchHighlighting#SearchOn()
-	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
+	return [1, l:offset]
     endif
-    return 'echoerr "TODO"'
+    return [0, '']
 endfunction
 
 let &cpo = s:save_cpo
