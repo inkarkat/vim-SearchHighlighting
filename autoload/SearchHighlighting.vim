@@ -1,113 +1,28 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
-"   - SearchHighlighting/AutoSearch.vim autoload script
-"   - ingo/compat.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/regexp.vim autoload script
-"   - ingo/register.vim autoload script
-"   - ingo/selection/frompattern.vim autoload script
-"   - ingo/text.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   2.00.021	26-Jan-2015	Generalize "c*" to handle all combinations:
-"				"c*", "gc*", "cW", "gcW".
-"   2.00.020	23-Jan-2015	BUG: Handle "No string under cursor" for ,*
-"				mapping correctly by returing the :echoerr call,
-"				not 0.
-"				BUG: Off-by-one in ,* on second-to-last
-"				character.
-"				Refactoring: Drop a:isWholeWordSearch from
-"				SearchHighlighting#SearchHighlightingNoJump().
-"				ENH: Implement searching for [whole] cWORD
-"				(a:starCommand = "W" / "gW").
-"   1.50.019	12-Dec-2014	Use SearchHighlighting#SearchOn() instead of
-"				directly manipulating s:isSearchOn.
-"				ENH: Support v:hlsearch (available since Vim
-"				7.4.079) via an alternative set of functions
-"				that don't use the s:isSearchOn internal flag.
-"   1.50.018	07-Dec-2014	Split off Auto Search stuff into separate
-"				SearchHighlighting/AutoSearch.vim.
-"				Wrap invocation to turn Auto Search off in
-"				check for its hook, to avoid loading the new
-"				module unnecessarily.
-"   1.50.017	06-Dec-2014	Change s:AutoSearchWhat to global variable and
-"				allow for separately tab page- and window-scoped ones.
-"				Extend SearchHighlighting#AutoSearchOff() logic
-"				to account for different scopes and only remove
-"				the autocmd hooks when no Auto Search at all is
-"				active any more.
-"				Consider the scopes in s:AutoSearch().
-"   1.22.016	13-Jun-2014	Add auto-search value of "selection" to only
-"				highlight selected text.
-"				Implement toggling of auto-search in visual
-"				mode. Save the original configured value and
-"				restore that for a later normal mode toggling.
-"   1.21.015	22-May-2014	Remove duplicate .*.* in pattern for visual
-"				blockwise search.
-"   1.21.014	05-May-2014	Also abort on :SearchAutoHighlighting error.
-"   1.20.013	18-Nov-2013	Use ingo#register#KeepRegisterExecuteOrFunc().
-"   1.20.012	07-Aug-2013	ENH: Add ,* search that keeps the current
-"				position within the current word when jumping to
-"				subsequent matches.
-"				Correctly emulate * behavior on whitespace-only
-"				lines where there's no cword: Issue "E348: No
-"				string under cursor".
-"   1.11.011	24-May-2013	Move ingosearch.vim to ingo-library.
-"   1.10.010	19-Jan-2013	For a blockwise visual selection, don't just
-"				match the block's lines on their own, but also
-"				when contained in other text.
-"				BUG: For {Visual}*, a [count] isn't considered.
-"				The problem is that getting the visual selection
-"				clobbers v:count. Instead of evaluating v:count
-"				only inside
-"				SearchHighlighting#SearchHighlightingNoJump(),
-"				pass it into the function as an argument before
-"				the selected text, so that it gets evaluated
-"				before the normal mode command clears the count.
-"   1.02.009	17-Jan-2013	Do not trigger modeline processing when enabling
-"				auto-search highlighting.
-"   1.01.008	03-Dec-2012	FIX: Prevent repeated error message when
-"				an invalid {what} was given to
-"				:SearchAutoHighlighting.
-"   1.00.007	04-Jul-2012	Minor: Tweak command completion.
-"	006	18-Apr-2012	Make the {what} argument to
-"				:SearchAutoHighlighting optional.
-"	005	17-Feb-2012	Add :AutoSearch {what} and :NoAutoSearch
-"				commands.
-"				ENH: Extend Autosearch to highlight other
-"				occurrences of the line, cWORD, etc.
-"				Restore the last used search pattern when
-"				Autosearch is turned off.
-"				Use SearchHighlighting#AutoSearchOff() instead
-"				of modifying s:isSearchOn directly.
-"	004	14-Jan-2011	FIX: Auto-search could clobber the blockwise
-"				yank mode of the unnamed register.
-"	003	05-Jan-2010	Moved SearchHighlighting#GetSearchPattern() into
-"				separate ingosearch.vim utility module and
-"				renamed to
-"				ingosearch#LiteralTextToSearchPattern().
-"	002	03-Jul-2009	Replaced global g:SearchHighlighting_IsSearchOn
-"				flag with s:isSearchOn and
-"				SearchHighlighting#SearchOn(),
-"				SearchHighlighting#SearchOff() and
-"				SearchHighlighting#IsSearch() functions.
-"				The toggle algorithm now only assumes that the hlsearch
-"				state is "on" if the state was not explicitly
-"				turned on. This allows third parties to :call
-"				SearchHighlighting#SearchOff() and have the next
-"				toggle command correctly turn highlighting back
-"				on.
-"	001	30-May-2009	Moved functions from plugin to separate autoload
-"				script.
-"				file creation
 let s:save_cpo = &cpo
 set cpo&vim
+
+function! SearchHighlighting#LastSearchPatternChanged()
+    call ingo#event#TriggerCustom('LastSearchPatternChanged')
+endfunction
+
+function! s:SetSearchPatternAndHistory( searchPattern )
+    let @/ = a:searchPattern
+
+    " The search pattern is added to the search history, as '/' or '*' would do.
+    call histadd('/', @/)
+
+    call SearchHighlighting#LastSearchPatternChanged()
+endfunction
+
 
 "- Toggle hlsearch ------------------------------------------------------------
 
@@ -181,21 +96,8 @@ function! s:ToggleHighlighting( searchPattern )
 	return 0
     endif
 
-    let @/ = a:searchPattern
     let s:isSearchOn = 1
-
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
-
-    " To enable highlighting of the search pattern (in case it was temporarily
-    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set.
-    " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping!
-    "if &hlsearch
-    "    set hlsearch
-    "endif
-
+    call s:SetSearchPatternAndHistory(a:searchPattern)
     return 1
 endfunction
 else
@@ -231,20 +133,7 @@ function! s:ToggleHighlighting( searchPattern )
 	return 0
     endif
 
-    let @/ = a:searchPattern
-
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
-
-    " To enable highlighting of the search pattern (in case it was temporarily
-    " turned off via :nohlsearch), we :set hlsearch, but only if that option is
-    " globally set.
-    " Note: This somehow cannot be done inside the function, it must be part of
-    " the mapping!
-    "if &hlsearch
-    "    set hlsearch
-    "endif
-
+    call s:SetSearchPatternAndHistory(a:searchPattern)
     return 1
 endfunction
 endif
@@ -252,7 +141,6 @@ endif
 
 
 "- Search Highlighting --------------------------------------------------------
-
 
 function! s:DefaultCountStar( starCommand )
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
@@ -264,16 +152,16 @@ function! s:DefaultCountStar( starCommand )
     let @/ = @/
     call SearchHighlighting#SearchOn()
 
+    call SearchHighlighting#LastSearchPatternChanged()
+
     " With a count, search is always on; toggling is only done without a count.
     return 1
 endfunction
 
 function! s:VisualCountStar( count, searchPattern )
-    let @/ = a:searchPattern
     call SearchHighlighting#SearchOn()
 
-    " The search pattern is added to the search history, as '/' or '*' would do.
-    call histadd('/', @/)
+    call s:SetSearchPatternAndHistory(a:searchPattern)
 
     " Note: When typed, [*#nN] open the fold at the search result, but inside a
     " mapping or :normal this must be done explicitly via 'zv'.
@@ -314,6 +202,7 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 endfunction
 let s:offsetPostCommand = ''
 function! SearchHighlighting#OffsetPostCommand()
+    call SearchHighlighting#LastSearchPatternChanged()
     execute s:offsetPostCommand
     let s:offsetPostCommand = ''
 endfunction
@@ -339,7 +228,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
     endif
 
     if a:starCommand =~# 'W' && a:starCommand !~# 'g'
-	let l:searchPattern = '\%(^\|\s\)\zs' . ingo#regexp#EscapeLiteralText(a:text, '/') . '\ze\%(\s\|$\)'
+	let l:searchPattern = ingo#regexp#MakeWholeWORDSearch(a:text, ingo#regexp#EscapeLiteralText(a:text, '/'))
     else
 	let l:searchPattern = ingo#regexp#FromLiteralText(a:text, (a:starCommand !~# 'g'), '/')
     endif
@@ -356,7 +245,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 		let l:offsetFromEnd = ingo#compat#strchars(l:cwordAfterCursor) - 1
 "****D echomsg '****' string(l:cwordAfterCursor) l:offsetFromEnd
 		" Note: Different return type (command vs. success flag) for "c*".
-		return s:OffsetStar( count, l:searchPattern, l:offsetFromEnd)
+		return s:OffsetStar(a:count, l:searchPattern, l:offsetFromEnd)
 	    endif
 	endif
 	return 'echoerr "E348: No string under cursor"'

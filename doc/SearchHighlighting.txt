@@ -12,7 +12,7 @@ todo				|SearchHighlighting-todo|
 history				|SearchHighlighting-history|
 
 ==============================================================================
-DESCRIPTION				       *SearchHighlighting-description*
+DESCRIPTION				      *SearchHighlighting-description*
 
 This plugin changes the |star| command *, so that it doesn't jump to the next
 match. (Unless you supply a [count], so 1* now restores the old * behavior.)
@@ -76,7 +76,7 @@ http://vim.wikia.com/wiki/VimTip1): >
   provides a separate highlighting for the match last jumped to.
 
 ==============================================================================
-USAGE						     *SearchHighlighting-usage*
+USAGE						    *SearchHighlighting-usage*
 
 *			Toggle search highlighting for the current whole
 			\<word\> on/off.
@@ -142,17 +142,22 @@ g<A-8>			Toggle search highlighting for the current WORD
 			cWORD: current WORD under cursor
 			line:  current text in line, excluding indent and
 			       trailing whitespace
-			exactline: exact current line
-			selection: only highlight selected text, in normal
-				   mode, nothing is selected
-			*-iw:      allow for variations in whitespace (also
-				   newline characters, i.e. allow a match
-				   distributed over multiple lines), and
-				   ignore any comment prefixes (e.g. /*, #),
-				   too.
-			*-nw:	   allow for variations in whitespace and also
-				   direct concatenation of lines (i.e. without
-				   any whitespace in between)
+			exactline:  exact current line
+			from-cursor:only consider the text from the beginning
+				    of the line up to the cursor; ignore text
+				    before the cursor
+			to-cursor:  only consider the text from the cursor to
+				    the end of the line
+			selection:  only highlight selected text, in normal
+				    mode, nothing is selected
+			*-iw:	    allow for variations in whitespace (also
+				    newline characters, i.e. allow a match
+				    distributed over multiple lines), and
+				    ignore any comment prefixes (e.g. /*, #),
+				    too.
+			*-nw:	    allow for variations in whitespace and also
+				    direct concatenation of lines (i.e. without
+				    any whitespace in between)
 
 						   *:NoSearchAutoHighlighting*
 :NoSearchAutoHighlighting[!]
@@ -175,24 +180,30 @@ g<A-8>			Toggle search highlighting for the current WORD
 			higher scopes.
 
 ==============================================================================
-INSTALLATION				      *SearchHighlighting-installation*
+INSTALLATION				     *SearchHighlighting-installation*
 
-This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
-the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the |:UseVimball| command. >
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-SearchHighlighting
+You can use your favorite plugin manager, or "git clone" into a directory used
+for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+development snapshot on "master".
+
+This script is also packaged as a |vimball|. If you have the "gunzip"
+decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the |:UseVimball| command. >
     vim SearchHighlighting*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
-DEPENDENCIES				      *SearchHighlighting-dependencies*
+DEPENDENCIES				     *SearchHighlighting-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.030 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.036 or
   higher.
 
 ==============================================================================
-CONFIGURATION				     *SearchHighlighting-configuration*
+CONFIGURATION				    *SearchHighlighting-configuration*
 						    *SearchHighlighting-remap*
 If you want to use different mappings, map your keys to the
 <Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
@@ -225,21 +236,35 @@ automatically re-enable it), use: >
     vmap <F12> <Plug>SearchHighlightingToggleHlsearch
 <
 ==============================================================================
-LIMITATIONS				       *SearchHighlighting-limitations*
+LIMITATIONS				      *SearchHighlighting-limitations*
 
-KNOWN PROBLEMS				    *SearchHighlighting-known-problems*
+KNOWN PROBLEMS				   *SearchHighlighting-known-problems*
 
-TODO						      *SearchHighlighting-todo*
+TODO						     *SearchHighlighting-todo*
 
-IDEAS						     *SearchHighlighting-ideas*
+IDEAS						    *SearchHighlighting-ideas*
+
+CONTRIBUTING				       *SearchHighlighting-contribute*
+
+Report any bugs, send patches, or suggest features via the issue tracker at
+https://github.com/inkarkat/vim-SearchHighlighting/issues or email (address
+below).
 
 ==============================================================================
-HISTORY						   *SearchHighlighting-history*
+HISTORY						  *SearchHighlighting-history*
 
-2.01	RELEASEME
+2.01	11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
   ignoring whitespace differences / and no whitespace.
-  *** You need to update to ingo-library (vimscript #4433) version 1.030! ***
+- Trigger LastSearchPatternChanged User event to notify other plugins (e.g. my
+  SearchRepeat.vim plugin (vimscript #4949)) of the change of register /.
+- :SearchAutoHighlighting commands inform the SearchRepeat.vim plugin that the
+  change in register / is automatic, not initiated by the user, so that the
+  current custom search is kept active instead of reverting back to standard
+  search.
+- ENH: Add from-cursor and to-cursor (and -iw, -nw variants) for
+  :SearchAutoHighlighting.
+  *** You need to update to ingo-library (vimscript #4433) version 1.036! ***
 
 2.00	27-Jan-2017
 - ENH: Allow tab page- and window-local Auto Search Highlighting via new
@@ -304,7 +329,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2017 Ingo Karkat
+Copyright: (C) 2008-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
