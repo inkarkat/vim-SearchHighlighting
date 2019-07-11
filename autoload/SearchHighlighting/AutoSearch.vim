@@ -1,18 +1,10 @@
 " SearchHighlighting/AutoSearch.vim: Auto-highlighting of the stuff under the cursor.
 "
 " DEPENDENCIES:
-"   - SearchHighlighting.vim autoload script
-"   - ingo/collections/fromsplit.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/event.vim autoload script
-"   - ingo/plugin/cmdcomplete.vim autoload script
-"   - ingo/plugin/setting.vim autoload script
-"   - ingo/regexp.vim autoload script
-"   - ingo/regexp/comments.vim autoload script
-"   - ingo/register.vim autoload script
+"   - ingo-library.vim plugin
 "   - SearchRepeat.vim autoload script (optional)
 "
-" Copyright: (C) 2009-2018 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>

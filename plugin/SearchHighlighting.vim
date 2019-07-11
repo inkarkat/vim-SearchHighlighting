@@ -2,14 +2,9 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - SearchHighlighting.vim autoload script
-"   - SearchHighlighting/AutoSearch.vim autoload script
-"   - ingo/avoidprompt.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/regexp.vim autoload script
-"   - ingo/selection.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2008-2017 Ingo Karkat
+" Copyright: (C) 2008-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
