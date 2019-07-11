@@ -167,6 +167,21 @@ endif
 
 
 
+"- mappings Repeat Current Position --------------------------------------------
+
+nnoremap <script> <silent> <Plug>(SearchHighlightingCNext)
+\ :<C-u>execute SearchHighlighting#RepeatWithCurrentPosition(0, v:count)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <script> <silent> <Plug>(SearchHighlightingCPrev)
+\ :<C-u>execute SearchHighlighting#RepeatWithCurrentPosition(1, v:count)<Bar>if &hlsearch<Bar>set hlsearch<Bar>endif<CR>
+if ! hasmapto('<Plug>(SearchHighlightingCNext)', 'n')
+    nmap ,n <Plug>(SearchHighlightingCNext)
+endif
+if ! hasmapto('<Plug>(SearchHighlightingCPrev)', 'n')
+    nmap ,N <Plug>(SearchHighlightingCPrev)
+endif
+
+
+
 "- mappings Auto Search Highlighting ------------------------------------------
 
 nnoremap <silent> <Plug>SearchHighlightingAutoSearch

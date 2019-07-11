@@ -188,16 +188,21 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 	" Instead, execute it separately.
     endif
 
+    return l:prefix . ' ' .
+    \   s:OffsetCommand(a:count, '/', a:searchPattern, 'e' . (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : '')) .
+    \   l:suffix
+endfunction
+function! s:OffsetCommand( count, searchCommand, searchPattern, offset ) abort
     " XXX: We cannot just :execute the command here, the offset part would be
     " lost on search repetitions via n/N. So instead return the Ex command to
     " the mapping for execution. This is possible here because we don't need the
     " return value to indicate the toggle state, as in the other mappings.
-    return printf("%s normal! %s/%s/e%s\<CR>%s",
-    \   l:prefix,
+    return printf("normal! %s%s%s%s%s\<CR>",
     \   (a:count > 1 ? a:count : ''),
-    \   a:searchPattern,
-    \   (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : ''),
-    \   l:suffix
+    \   a:searchCommand,
+    \   ingo#escape#OnlyUnescaped(a:searchPattern, a:searchCommand),
+    \   a:searchCommand,
+    \   a:offset
     \)
 endfunction
 let s:offsetPostCommand = ''
@@ -279,6 +284,72 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 	    return s:ToggleHighlighting(l:searchPattern)
 	endif
     endif
+endfunction
+
+function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
+    let [l:isFound, l:offset, l:matchesInThisLine] = s:GetOffsetFromInsideMatch(a:isBackwards)
+    if ! l:isFound
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards, l:matchesInThisLine)
+    endif
+
+    if l:isFound
+	call SearchHighlighting#SearchOn()
+	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
+    else
+	return 'echoerr printf("Could not find a match for %s nearby", @/)'
+    endif
+endfunction
+function! s:GetOffset( isBackwards, match ) abort
+    let l:here = getpos('.')[1:2]
+    let l:referencePos = (a:isBackwards ? a:match[0] : a:match[1])
+    let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, l:here]))
+    let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
+    return (l:offsetFromReference == 0 ?
+    \   '' :
+    \   (a:isBackwards ? 's' : 'e') .
+    \       string((ingo#pos#IsBefore(l:here, l:referencePos) ? -1 : 1) * l:offsetFromReference)
+    \)
+endfunction
+function! s:GetOffsetFromInsideMatch( isBackwards ) abort
+    let l:match = ingo#area#frompattern#GetAroundHere(@/)
+    if l:match[0] == [0, 0]
+	return [0, '', []]
+    endif
+
+    " We may be on a match, but also in between two matches in the current line.
+    " To find out (without modifying the search pattern to include an assertion
+    " on the current cursor position), find all matches within the current line
+    " and check whether the current area is one of them.
+    let l:thisLnum = line('.')
+    let l:matchesInThisLine = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+    if index(l:matchesInThisLine, l:match) == -1
+	return [0, '', l:matchesInThisLine]
+    endif
+
+    return [1, s:GetOffset(a:isBackwards, l:match), l:matchesInThisLine]
+endfunction
+function! s:GetOffsetFromSameLine( isBackwards, matchesInThisLine ) abort
+    if empty(a:matchesInThisLine)
+	let l:thisLnum = line('.')
+	let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+    else
+	let l:matches = a:matchesInThisLine
+    endif
+
+    if empty(l:matches)
+	return [0, '']
+    elseif len(l:matches) == 1
+	return [1, s:GetOffset(a:isBackwards, l:matches[0])]
+    else
+	" Choose the one match with the smallest offset.
+	let l:offsets = map(l:matches, 's:GetOffset(a:isBackwards, v:val)')
+	let l:smallestOffset = sort(l:offsets, 's:OffsetCompare')[0]
+	return [1, l:smallestOffset]
+    endif
+endfunction
+function! s:OffsetCompare( ... ) abort
+    let l:absoluteOffsets = map(copy(a:000), 'matchstr(v:val, "\\d\\+$")')
+    return call('ingo#collections#numsort', l:absoluteOffsets)
 endfunction
 
 let &cpo = s:save_cpo

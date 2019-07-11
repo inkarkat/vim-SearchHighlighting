@@ -118,6 +118,23 @@ USAGE
                             have to define|SearchHighlighting-configuration|
                             yourself.
 
+    [count],n               Repeat the latest "/" search [count] times, keeping
+                            the cursor at the current position relative to the end
+                            of the current match (via search-offset).
+                            Like ,star, but reuses the last search pattern
+                            instead of searching for the word under the cursor.
+                            As such, the cursor can also be outside a match (but
+                            still within the same line), and a corresponding
+                            offset (the smallest possible if there are several
+                            nearby matches) is chosen.
+    [count],N               Repeat the latest "?" search [count] times, keeping
+                            the cursor at the current position relative to the
+                            start of the current match (via search-offset).
+                            Note: To avoid another set of mappings, the search
+                            direction and offset anchor (start or end of match)
+                            are combined here. The search direction can easily be
+                            reverted via n|/|N, anyway.
+
     <Leader>*               Toggle auto-search highlighting (using the last
                             {what}; default is "wword").
     {Visual}<Leader>*       Toggle auto-search highlighting; when turning on, a
@@ -242,6 +259,10 @@ below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 2.10    RELEASEME
+- ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
+  therefore also allow offsets outside of the match itself.
 
 ##### 2.01    11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
