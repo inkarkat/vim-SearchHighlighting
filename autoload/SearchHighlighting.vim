@@ -188,16 +188,21 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 	" Instead, execute it separately.
     endif
 
+    return l:prefix . ' ' .
+    \   s:OffsetCommand(a:count, '/', a:searchPattern, 'e' . (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : '')) .
+    \   l:suffix
+endfunction
+function! s:OffsetCommand( count, searchCommand, searchPattern, offset ) abort
     " XXX: We cannot just :execute the command here, the offset part would be
     " lost on search repetitions via n/N. So instead return the Ex command to
     " the mapping for execution. This is possible here because we don't need the
     " return value to indicate the toggle state, as in the other mappings.
-    return printf("%s normal! %s/%s/e%s\<CR>%s",
-    \   l:prefix,
+    return printf("normal! %s%s%s%s%s\<CR>",
     \   (a:count > 1 ? a:count : ''),
-    \   a:searchPattern,
-    \   (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : ''),
-    \   l:suffix
+    \   a:searchCommand,
+    \   ingo#escape#OnlyUnescaped(a:searchPattern, a:searchCommand),
+    \   a:searchCommand,
+    \   a:offset
     \)
 endfunction
 let s:offsetPostCommand = ''
