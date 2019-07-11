@@ -21,7 +21,7 @@ the current word, the selected text is used as the literal search pattern.
 The auto-search functionality instantly highlights the word under the cursor
 when typing or moving around. This can be helpful while browsing source code;
 whenever you position the cursor on an identifier, all other occurrences are
-instantly highlighted. This functionality is toggled on/off via <Leader>\*. You
+instantly highlighted. This functionality is toggled on/off via &lt;Leader&gt;\*. You
 can also :nohlsearch to temporarily disable the highlighting.
 
 ### SEE ALSO
@@ -31,7 +31,7 @@ can also :nohlsearch to temporarily disable the highlighting.
 - SearchAlternatives.vim ([vimscript #4146](http://www.vim.org/scripts/script.php?script_id=4146)) can add and subtract search
   alternatives via mappings and commands.
 - To also show the number of matches when selecting a word (\*, g\* etc.),
-  you can append the corresponding command to the <Plug> mapping (see
+  you can append the corresponding command to the &lt;Plug&gt; mapping (see
   SearchHighlighting-remap):
  <!-- -->
 
@@ -59,7 +59,7 @@ http://vim.wikia.com/wiki/VimTip1):
 - https://github.com/bronson/vim-visual-star-search provides searching of the
   visual selection
 - visualstar.vim ([vimscript #2944](http://www.vim.org/scripts/script.php?script_id=2944)) provides searching of the visual selection
-- select & search ([vimscript #4819](http://www.vim.org/scripts/script.php?script_id=4819)) can use either n/N or \* in the visual
+- select &amp; search ([vimscript #4819](http://www.vim.org/scripts/script.php?script_id=4819)) can use either n/N or \* in the visual
   selection, and (like this plugin) can avoid jumping.
 - vim-cursorword ([vimscript #5100](http://www.vim.org/scripts/script.php?script_id=5100)) automatically underlines the current word
   in the current window (like :SearchAutoHighlighting), but uses :match
@@ -199,7 +199,7 @@ CONFIGURATION
 ------------------------------------------------------------------------------
 
 If you want to use different mappings, map your keys to the
-<Plug>SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
+&lt;Plug&gt;SearchHighlighting... mapping targets _before_ sourcing the script (e.g.
 in your vimrc):
 
     nmap <Leader>&   <Plug>SearchHighlightingWORD
@@ -243,7 +243,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.01    RELEASEME
+##### 2.01    11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
   ignoring whitespace differences / and no whitespace.
 - Trigger LastSearchPatternChanged User event to notify other plugins (e.g. my
@@ -265,15 +265,15 @@ __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scrip
 - BUG: Handle "No string under cursor" for ,\* mapping correctly by returing
   the :echoerr call, not 0.
 - BUG: Off-by-one in ,\* on second-to-last character.
-- ENH: <A-8>, g<A-8> mappings star-like search for [whole] cWORD (instead of
+- ENH: &lt;A-8&gt;, g&lt;A-8&gt; mappings star-like search for [whole] cWORD (instead of
   cword).
 - Generalize the ,\* mapping to support all four variants of the \* mapping
   (whole / current, cword, cWORD), too.
 - Only define default ,\* etc. mappings when the map leader isn't set to ",",
-  which would make it conflict with the <Leader>\* Auto-Search mapping. Thanks
+  which would make it conflict with the &lt;Leader&gt;\* Auto-Search mapping. Thanks
   to Ilya Tumaykin for raising this issue.
 - Don't show strange whitespace matches on ":SearchAutoHighlighting wWORD"
-  caused by empty \%(^\|\s\)\zs\ze\%(\s\|$\) pattern. Set completely empty
+  caused by empty \\%(^\\|\\s\\)\\zs\\ze\\%(\\s\\|$\\) pattern. Set completely empty
   pattern then.
 - Re-enable search highlighting when switching to a window that has Auto
   Search. Clear search highlighting when switching from a window that has Auto
@@ -285,7 +285,7 @@ __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scrip
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.023!__
 
 ##### 1.22    19-Jun-2014
-- Add <Leader>\* visual mode mapping that turns on auto-search only for
+- Add &lt;Leader&gt;\* visual mode mapping that turns on auto-search only for
   selected text (without affecting the original {what} default).
 - Add "selection" value for {what} in :SearchHighlightingAutoSearch that only
   highlights selected text.
@@ -326,4 +326,4 @@ __You need to separately
 Copyright: (C) 2008-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

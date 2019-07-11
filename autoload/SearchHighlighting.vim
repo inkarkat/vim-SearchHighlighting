@@ -1,14 +1,7 @@
 " SearchHighlighting.vim: Highlighting of searches via star, auto-highlighting.
 "
 " DEPENDENCIES:
-"   - SearchHighlighting/AutoSearch.vim autoload script
-"   - ingo/compat.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/event.vim autoload script
-"   - ingo/regexp.vim autoload script
-"   - ingo/register.vim autoload script
-"   - ingo/selection/frompattern.vim autoload script
-"   - ingo/text.vim autoload script
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
