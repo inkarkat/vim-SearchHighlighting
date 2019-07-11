@@ -287,9 +287,9 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 endfunction
 
 function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
-    let [l:isFound, l:offset, l:matchesInThisLine] = s:GetOffsetFromInsideMatch(a:isBackwards)
+    let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackwards)
     if ! l:isFound
-	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards, l:matchesInThisLine)
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards)
     endif
 
     if l:isFound
@@ -311,30 +311,15 @@ function! s:GetOffset( isBackwards, match ) abort
     \)
 endfunction
 function! s:GetOffsetFromInsideMatch( isBackwards ) abort
-    let l:match = ingo#area#frompattern#GetAroundHere(@/)
-    if l:match[0] == [0, 0]
-	return [0, '', []]
-    endif
-
-    " We may be on a match, but also in between two matches in the current line.
-    " To find out (without modifying the search pattern to include an assertion
-    " on the current cursor position), find all matches within the current line
-    " and check whether the current area is one of them.
-    let l:thisLnum = line('.')
-    let l:matchesInThisLine = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
-    if index(l:matchesInThisLine, l:match) == -1
-	return [0, '', l:matchesInThisLine]
-    endif
-
-    return [1, s:GetOffset(a:isBackwards, l:match), l:matchesInThisLine]
+    let l:match = ingo#area#frompattern#GetCurrent(@/)
+    return (l:match[0] == [0, 0] ?
+    \   [0, ''] :
+    \   [1, s:GetOffset(a:isBackwards, l:match)]
+    \)
 endfunction
-function! s:GetOffsetFromSameLine( isBackwards, matchesInThisLine ) abort
-    if empty(a:matchesInThisLine)
-	let l:thisLnum = line('.')
-	let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
-    else
-	let l:matches = a:matchesInThisLine
-    endif
+function! s:GetOffsetFromSameLine( isBackwards ) abort
+    let l:thisLnum = line('.')
+    let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
 
     if empty(l:matches)
 	return [0, '']
