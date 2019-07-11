@@ -253,7 +253,7 @@ below).
 ==============================================================================
 HISTORY						  *SearchHighlighting-history*
 
-2.01	RELEASEME
+2.01	11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
   ignoring whitespace differences / and no whitespace.
 - Trigger LastSearchPatternChanged User event to notify other plugins (e.g. my
