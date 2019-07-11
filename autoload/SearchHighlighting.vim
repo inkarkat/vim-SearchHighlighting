@@ -286,6 +286,23 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
     endif
 endfunction
 
+function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
+    let [l:startPos, l:endPos] = ingo#area#frompattern#GetAroundHere(@/)
+    if l:startPos != [0, 0]
+	let l:referencePos = (a:isBackwards ? l:endPos : l:startPos)
+	let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, getpos('.')[1:2]]))
+	let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
+	let l:offset = (l:offsetFromReference > 0 ?
+	\   (a:isBackwards ? 'e-' : 's+') . l:offsetFromReference :
+	\   ''
+	\)
+
+	call SearchHighlighting#SearchOn()
+	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
+    endif
+    return 'echoerr "TODO"'
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
