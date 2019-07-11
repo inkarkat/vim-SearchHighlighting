@@ -296,7 +296,7 @@ function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
 	call SearchHighlighting#SearchOn()
 	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
     else
-	return 'echoerr printf("Could not find a match for %s nearby", @/)'
+	return 'echoerr printf("Could not find a nearby match for %s", @/)'
     endif
 endfunction
 function! s:GetOffset( isBackwards, match ) abort
