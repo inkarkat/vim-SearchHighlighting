@@ -286,48 +286,48 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
     endif
 endfunction
 
-function! SearchHighlighting#RepeatWithCurrentPosition( isBackwards, count )
-    let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackwards)
+function! SearchHighlighting#RepeatWithCurrentPosition( isBackward, count )
+    let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackward)
     if ! l:isFound
-	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackwards)
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackward)
     endif
 
     if l:isFound
 	call SearchHighlighting#SearchOn()
-	return s:OffsetCommand(a:count, (a:isBackwards ? '?' : '/'), @/, l:offset)
+	return s:OffsetCommand(a:count, (a:isBackward ? '?' : '/'), @/, l:offset)
     else
 	return 'echoerr printf("Could not find a nearby match for %s", @/)'
     endif
 endfunction
-function! s:GetOffset( isBackwards, match ) abort
+function! s:GetOffset( isBackward, match ) abort
     let l:here = getpos('.')[1:2]
-    let l:referencePos = (a:isBackwards ? a:match[0] : a:match[1])
+    let l:referencePos = (a:isBackward ? a:match[0] : a:match[1])
     let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, l:here]))
     let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
     return (l:offsetFromReference == 0 ?
     \   '' :
-    \   (a:isBackwards ? 's' : 'e') .
+    \   (a:isBackward ? 's' : 'e') .
     \       string((ingo#pos#IsBefore(l:here, l:referencePos) ? -1 : 1) * l:offsetFromReference)
     \)
 endfunction
-function! s:GetOffsetFromInsideMatch( isBackwards ) abort
+function! s:GetOffsetFromInsideMatch( isBackward ) abort
     let l:match = ingo#area#frompattern#GetCurrent(@/)
     return (l:match[0] == [0, 0] ?
     \   [0, ''] :
-    \   [1, s:GetOffset(a:isBackwards, l:match)]
+    \   [1, s:GetOffset(a:isBackward, l:match)]
     \)
 endfunction
-function! s:GetOffsetFromSameLine( isBackwards ) abort
+function! s:GetOffsetFromSameLine( isBackward ) abort
     let l:thisLnum = line('.')
     let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
 
     if empty(l:matches)
 	return [0, '']
     elseif len(l:matches) == 1
-	return [1, s:GetOffset(a:isBackwards, l:matches[0])]
+	return [1, s:GetOffset(a:isBackward, l:matches[0])]
     else
 	" Choose the one match with the smallest offset.
-	let l:offsets = map(l:matches, 's:GetOffset(a:isBackwards, v:val)')
+	let l:offsets = map(l:matches, 's:GetOffset(a:isBackward, v:val)')
 	let l:smallestOffset = sort(l:offsets, 's:OffsetCompare')[0]
 	return [1, l:smallestOffset]
     endif
