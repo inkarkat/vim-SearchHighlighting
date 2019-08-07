@@ -98,10 +98,10 @@ USAGE
     [count]g*               word nearest to the cursor.
     {Visual}[count]*
 
-    <A-8>                   Toggle search highlighting for the current whole
+    ALT-8                   Toggle search highlighting for the current whole
                             \<WORD\> on/off. With [count]: Search forward for the
                             [count]'th occurrence.
-    g<A-8>                  Toggle search highlighting for the current WORD
+    g_ALT-8                 Toggle search highlighting for the current WORD
                             on/off. With [count]: Search forward for the
                             [count]'th occurrence.
 
@@ -112,8 +112,8 @@ USAGE
                             Observes the new non-jumping behavior of the star
                             commands without a [count].
     [count],g*              Like above: variants of the searches that keep the
-    ,<A-8>                  cursor at the current relative match position.
-    ,g<A-8>                 Note that if you have set mapleader to ",", some of
+    ,_ALT-8                 cursor at the current relative match position.
+    ,g_ALT-8                Note that if you have set mapleader to ",", some of
                             these would conflict with other plugin mappings; you
                             have to define|SearchHighlighting-configuration|
                             yourself.
