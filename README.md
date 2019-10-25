@@ -209,7 +209,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.039 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.040 or
   higher.
 
 CONFIGURATION
@@ -264,7 +264,7 @@ HISTORY
 - ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
   therefore also allow offsets outside of the match itself.
 
-__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.039!__
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.040!__
 
 ##### 2.01    11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match
