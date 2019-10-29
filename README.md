@@ -99,7 +99,7 @@ USAGE
     {Visual}[count]*
 
     ALT-8                   Toggle search highlighting for the current whole
-                            \<WORD\> on/off. With [count]: Search forward for the
+                            \_sWORD\_s on/off. With [count]: Search forward for the
                             [count]'th occurrence.
     g_ALT-8                 Toggle search highlighting for the current WORD
                             on/off. With [count]: Search forward for the
