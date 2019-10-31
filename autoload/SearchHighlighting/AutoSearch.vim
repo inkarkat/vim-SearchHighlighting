@@ -13,7 +13,7 @@ set cpo&vim
 
 let g:AutoSearchWhat = 'wword'
 let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'exactline-nw', 'line', 'line-iw', 'line-nw', 'from-cursor', 'from-cursor-iw', 'from-cursor-nw', 'to-cursor', 'to-cursor-iw', 'to-cursor-nw', 'selection', 'selection-iw', 'selection-nw']
-call ingo#plugin#cmdcomplete#MakeFixedListCompleteFunc(s:AutoSearchWhatValues, 'SearchHighlightingAutoSearchCompleteFunc')
+call ingo#plugin#cmdcomplete#MakeFirstArgumentFixedListCompleteFunc(s:AutoSearchWhatValues, '', 'SearchHighlightingAutoSearchCompleteFunc')
 function! SearchHighlighting#AutoSearch#Complete( ... )
     return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
 endfunction

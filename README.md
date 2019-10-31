@@ -98,10 +98,10 @@ USAGE
     [count]g*               word nearest to the cursor.
     {Visual}[count]*
 
-    <A-8>                   Toggle search highlighting for the current whole
-                            \<WORD\> on/off. With [count]: Search forward for the
+    ALT-8                   Toggle search highlighting for the current whole
+                            \_sWORD\_s on/off. With [count]: Search forward for the
                             [count]'th occurrence.
-    g<A-8>                  Toggle search highlighting for the current WORD
+    g_ALT-8                 Toggle search highlighting for the current WORD
                             on/off. With [count]: Search forward for the
                             [count]'th occurrence.
 
@@ -112,11 +112,28 @@ USAGE
                             Observes the new non-jumping behavior of the star
                             commands without a [count].
     [count],g*              Like above: variants of the searches that keep the
-    ,<A-8>                  cursor at the current relative match position.
-    ,g<A-8>                 Note that if you have set mapleader to ",", some of
+    ,_ALT-8                 cursor at the current relative match position.
+    ,g_ALT-8                Note that if you have set mapleader to ",", some of
                             these would conflict with other plugin mappings; you
                             have to define|SearchHighlighting-configuration|
                             yourself.
+
+    [count],n               Repeat the latest "/" search [count] times, keeping
+                            the cursor at the current position relative to the end
+                            of the current match (via search-offset).
+                            Like ,star, but reuses the last search pattern
+                            instead of searching for the word under the cursor.
+                            As such, the cursor can also be outside a match (but
+                            still within the same line), and a corresponding
+                            offset (the smallest possible if there are several
+                            nearby matches) is chosen.
+    [count],N               Repeat the latest "?" search [count] times, keeping
+                            the cursor at the current position relative to the
+                            start of the current match (via search-offset).
+                            Note: To avoid another set of mappings, the search
+                            direction and offset anchor (start or end of match)
+                            are combined here. The search direction can easily be
+                            reverted via n|/|N, anyway.
 
     <Leader>*               Toggle auto-search highlighting (using the last
                             {what}; default is "wword").
@@ -192,7 +209,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.036 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.040 or
   higher.
 
 CONFIGURATION
@@ -242,6 +259,12 @@ below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 2.10    31-Oct-2019
+- ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
+  therefore also allow offsets outside of the match itself.
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.040!__
 
 ##### 2.01    11-Jul-2019
 - ENH: Add ...-iw / ...-nw variants of exactline, line, selection that match

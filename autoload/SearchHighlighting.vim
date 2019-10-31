@@ -188,16 +188,21 @@ function! s:OffsetStar( count, searchPattern, offsetFromEnd )
 	" Instead, execute it separately.
     endif
 
+    return l:prefix . ' ' .
+    \   s:OffsetCommand(a:count, '/', a:searchPattern, 'e' . (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : '')) .
+    \   l:suffix
+endfunction
+function! s:OffsetCommand( count, searchCommand, searchPattern, offset ) abort
     " XXX: We cannot just :execute the command here, the offset part would be
     " lost on search repetitions via n/N. So instead return the Ex command to
     " the mapping for execution. This is possible here because we don't need the
     " return value to indicate the toggle state, as in the other mappings.
-    return printf("%s normal! %s/%s/e%s\<CR>%s",
-    \   l:prefix,
+    return printf("normal! %s%s%s%s%s\<CR>",
     \   (a:count > 1 ? a:count : ''),
-    \   a:searchPattern,
-    \   (a:offsetFromEnd > 0 ? -1 * a:offsetFromEnd : ''),
-    \   l:suffix
+    \   a:searchCommand,
+    \   ingo#escape#OnlyUnescaped(a:searchPattern, a:searchCommand),
+    \   a:searchCommand,
+    \   a:offset
     \)
 endfunction
 let s:offsetPostCommand = ''
@@ -279,6 +284,57 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 	    return s:ToggleHighlighting(l:searchPattern)
 	endif
     endif
+endfunction
+
+function! SearchHighlighting#RepeatWithCurrentPosition( isBackward, count )
+    let [l:isFound, l:offset] = s:GetOffsetFromInsideMatch(a:isBackward)
+    if ! l:isFound
+	let [l:isFound, l:offset] = s:GetOffsetFromSameLine(a:isBackward)
+    endif
+
+    if l:isFound
+	call SearchHighlighting#SearchOn()
+	return s:OffsetCommand(a:count, (a:isBackward ? '?' : '/'), @/, l:offset)
+    else
+	return 'echoerr printf("Could not find a nearby match for %s", @/)'
+    endif
+endfunction
+function! s:GetOffset( isBackward, match ) abort
+    let l:here = getpos('.')[1:2]
+    let l:referencePos = (a:isBackward ? a:match[0] : a:match[1])
+    let l:textToCursor = call('ingo#text#Get', ingo#pos#Sort([l:referencePos, l:here]))
+    let l:offsetFromReference = ingo#compat#strchars(l:textToCursor) - 1
+    return (l:offsetFromReference == 0 ?
+    \   '' :
+    \   (a:isBackward ? 's' : 'e') .
+    \       string((ingo#pos#IsBefore(l:here, l:referencePos) ? -1 : 1) * l:offsetFromReference)
+    \)
+endfunction
+function! s:GetOffsetFromInsideMatch( isBackward ) abort
+    let l:match = ingo#area#frompattern#GetCurrent(@/)
+    return (l:match[0] == [0, 0] ?
+    \   [0, ''] :
+    \   [1, s:GetOffset(a:isBackward, l:match)]
+    \)
+endfunction
+function! s:GetOffsetFromSameLine( isBackward ) abort
+    let l:thisLnum = line('.')
+    let l:matches = ingo#area#frompattern#Get(l:thisLnum, l:thisLnum, @/, 0, 0)
+
+    if empty(l:matches)
+	return [0, '']
+    elseif len(l:matches) == 1
+	return [1, s:GetOffset(a:isBackward, l:matches[0])]
+    else
+	" Choose the one match with the smallest offset.
+	let l:offsets = map(l:matches, 's:GetOffset(a:isBackward, v:val)')
+	let l:smallestOffset = sort(l:offsets, 's:OffsetCompare')[0]
+	return [1, l:smallestOffset]
+    endif
+endfunction
+function! s:OffsetCompare( ... ) abort
+    let l:absoluteOffsets = map(copy(a:000), 'matchstr(v:val, "\\d\\+$")')
+    return call('ingo#collections#numsort', l:absoluteOffsets)
 endfunction
 
 let &cpo = s:save_cpo
