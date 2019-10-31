@@ -260,7 +260,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.10    RELEASEME
+##### 2.10    31-Oct-2019
 - ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
   therefore also allow offsets outside of the match itself.
 
