@@ -94,9 +94,9 @@ USAGE
                             but not a single
                                 foo
 
-    [count]*                Search forward for the [count]'th occurrence of the
-    [count]g*               word nearest to the cursor.
-    {Visual}[count]*
+    {count}*                Search forward for the {count}'th occurrence of the
+    {count}g*               word nearest to the cursor.
+    {Visual}{count}*
 
     ALT-8                   Toggle search highlighting for the current whole
                             \_sWORD\_s on/off. With [count]: Search forward for the
