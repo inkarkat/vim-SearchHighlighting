@@ -44,7 +44,7 @@ can also :nohlsearch to temporarily disable the highlighting.
 
 I came up with this on my own; however, the idea can be traced back to
 francoissteinmetz and da.thompson in the comments of vimtip #1 (now at
-http://vim.wikia.com/wiki/VimTip1):
+https://vim.fandom.com/wiki/Search_for_visually_selected_text):
 
     map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 
