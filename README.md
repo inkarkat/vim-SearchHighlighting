@@ -260,6 +260,12 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 2.11    RELEASEME
+- Minor: Also trigger LastSearchPatternChanged during auto-search whenever the
+  search pattern changes.
+- Trigger separate SearchHighlightingAutoSearch User event for plugins that
+  just want to react on auto highlighting.
+
 ##### 2.10    31-Oct-2019
 - ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
   therefore also allow offsets outside of the match itself.
@@ -346,7 +352,7 @@ __You need to separately
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2019 Ingo Karkat -
+Copyright: (C) 2008-2021 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

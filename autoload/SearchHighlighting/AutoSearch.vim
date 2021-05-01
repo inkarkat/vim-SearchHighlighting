@@ -4,7 +4,7 @@
 "   - ingo-library.vim plugin
 "   - SearchRepeat.vim autoload script (optional)
 "
-" Copyright: (C) 2009-2019 Ingo Karkat
+" Copyright: (C) 2009-2021 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -70,6 +70,7 @@ function! s:AutoSearch( mode )
     endif
 
 
+    let l:originalSearchPattern = @/
     if stridx("sS\<C-s>vV\<C-v>", a:mode) != -1
 	" In visual and select mode, search for the selected text.
 
@@ -119,6 +120,11 @@ function! s:AutoSearch( mode )
     " Inform SearchRepeat.vim that this change was "automatic", not initiated by
     " the user, so that the repeated search does not revert to standard search.
     silent! call SearchRepeat#UpdateLastSearchPattern()
+
+    if @/ !=# l:originalSearchPattern
+	call SearchHighlighting#LastSearchPatternChanged()
+	call ingo#event#TriggerCustom('SearchHighlightingAutoSearch')
+    endif
 
     return l:isAutoSearchScopeChange
 endfunction
