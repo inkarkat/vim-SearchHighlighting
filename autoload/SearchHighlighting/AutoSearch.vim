@@ -4,7 +4,7 @@
 "   - ingo-library.vim plugin
 "   - SearchRepeat.vim autoload script (optional)
 "
-" Copyright: (C) 2009-2021 Ingo Karkat
+" Copyright: (C) 2009-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -12,7 +12,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:AutoSearchWhat = 'wword'
-let s:AutoSearchWhatValues = ['wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'exactline-nw', 'line', 'line-iw', 'line-nw', 'from-cursor', 'from-cursor-iw', 'from-cursor-nw', 'to-cursor', 'to-cursor-iw', 'to-cursor-nw', 'selection', 'selection-iw', 'selection-nw']
+let s:AutoSearchWhatValues = ['cchar', 'wword', 'wWORD', 'cword', 'cWORD', 'exactline', 'exactline-iw', 'exactline-nw', 'line', 'line-iw', 'line-nw', 'from-cursor', 'from-cursor-iw', 'from-cursor-nw', 'to-cursor', 'to-cursor-iw', 'to-cursor-nw', 'selection', 'selection-iw', 'selection-nw']
 call ingo#plugin#cmdcomplete#MakeFirstArgumentFixedListCompleteFunc(s:AutoSearchWhatValues, '', 'SearchHighlightingAutoSearchCompleteFunc')
 function! SearchHighlighting#AutoSearch#Complete( ... )
     return call('SearchHighlightingAutoSearchCompleteFunc', a:000)
@@ -100,6 +100,8 @@ function! s:AutoSearch( mode )
 	    call s:SetLiteralSearch('\%(^\|\s\)\zs', l:cWORD, '\ze\%(\s\|$\)', l:AutoSearchWhat)
 	elseif l:AutoSearchWhat ==? 'cword'
 	    let @/ = ingo#regexp#EscapeLiteralText(expand('<'. l:AutoSearchWhat . '>'), '/')
+	elseif l:AutoSearchWhat ==? 'cchar'
+	    let @/ = ingo#regexp#EscapeLiteralText(ingo#text#GetChar(getpos('.')[1:2]), '/')
 	elseif l:AutoSearchWhat =~# '^from-cursor'
 	    let l:cursorText = ingo#strdisplaywidth#CutLeft(getline('.'), virtcol('.') - 1)[1]
 	    call s:SetLiteralSearch('', l:cursorText, '$', l:AutoSearchWhat)

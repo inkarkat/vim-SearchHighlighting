@@ -146,6 +146,7 @@ USAGE
                             Turn on automatic highlighting of occurrences of
                             {what} in normal mode, and the selected text in visual
                             / select mode. Possible values:
+                            cchar: current character under cursor
                             wword: whole cword, like star; this is the default
                             wWORD: whole cWORD, delimited by whitespace
                             cword: current word under cursor
@@ -265,6 +266,7 @@ HISTORY
   search pattern changes.
 - Trigger separate SearchHighlightingAutoSearch User event for plugins that
   just want to react on auto highlighting.
+- Add :SearchAutoHighlighting cchar for the current character
 
 ##### 2.10    31-Oct-2019
 - ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
@@ -352,7 +354,7 @@ __You need to separately
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2021 Ingo Karkat -
+Copyright: (C) 2008-2022 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
