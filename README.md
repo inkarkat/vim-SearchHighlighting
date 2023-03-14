@@ -35,7 +35,7 @@ can also :nohlsearch to temporarily disable the highlighting.
   SearchHighlighting-remap):
  <!-- -->
 
-    nmap <silent> * <Plug>SearchHighlightingStar:%s///gn<CR>
+    nmap <silent> * <Plug>SearchHighlightingStarm`:%s///gn<CR>g``
 
   The SearchPosition.vim plugin ([vimscript #2634](http://www.vim.org/scripts/script.php?script_id=2634)) provides an extended
   version of that command.
@@ -44,7 +44,7 @@ can also :nohlsearch to temporarily disable the highlighting.
 
 I came up with this on my own; however, the idea can be traced back to
 francoissteinmetz and da.thompson in the comments of vimtip #1 (now at
-http://vim.wikia.com/wiki/VimTip1):
+https://vim.fandom.com/wiki/Search_for_visually_selected_text):
 
     map <silent> <F10> :set invhls<CR>:let @/="<C-r><C-w>"<CR>
 
@@ -94,9 +94,9 @@ USAGE
                             but not a single
                                 foo
 
-    [count]*                Search forward for the [count]'th occurrence of the
-    [count]g*               word nearest to the cursor.
-    {Visual}[count]*
+    {count}*                Search forward for the {count}'th occurrence of the
+    {count}g*               word nearest to the cursor.
+    {Visual}{count}*
 
     ALT-8                   Toggle search highlighting for the current whole
                             \_sWORD\_s on/off. With [count]: Search forward for the
@@ -146,6 +146,7 @@ USAGE
                             Turn on automatic highlighting of occurrences of
                             {what} in normal mode, and the selected text in visual
                             / select mode. Possible values:
+                            cchar: current character under cursor
                             wword: whole cword, like star; this is the default
                             wWORD: whole cWORD, delimited by whitespace
                             cword: current word under cursor
@@ -260,6 +261,13 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 2.11    14-Mar-2023
+- Minor: Also trigger LastSearchPatternChanged during auto-search whenever the
+  search pattern changes.
+- Trigger separate SearchHighlightingAutoSearch User event for plugins that
+  just want to react on auto highlighting.
+- Add :SearchAutoHighlighting cchar for the current character
+
 ##### 2.10    31-Oct-2019
 - ENH: Add ,n and ,N variants of ,\* that reuse the last search pattern, and
   therefore also allow offsets outside of the match itself.
@@ -346,7 +354,7 @@ __You need to separately
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2019 Ingo Karkat -
+Copyright: (C) 2008-2023 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
