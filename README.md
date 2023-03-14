@@ -261,7 +261,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.11    RELEASEME
+##### 2.11    14-Mar-2023
 - Minor: Also trigger LastSearchPatternChanged during auto-search whenever the
   search pattern changes.
 - Trigger separate SearchHighlightingAutoSearch User event for plugins that
