@@ -42,7 +42,7 @@ SEE ALSO								     *
 - To also show the number of matches when selecting a word (|*|, |g*| etc.),
   you can append the corresponding command to the <Plug> mapping (see
   |SearchHighlighting-remap|): >
-    nmap <silent> * <Plug>SearchHighlightingStar:%s///gn<CR>
+    nmap <silent> * <Plug>SearchHighlightingStarm`:%s///gn<CR>g``
 < The |SearchPosition.vim| plugin (vimscript #2634) provides an extended
   version of that command.
 
@@ -359,7 +359,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2008-2022 Ingo Karkat
+Copyright: (C) 2008-2023 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

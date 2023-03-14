@@ -35,7 +35,7 @@ can also :nohlsearch to temporarily disable the highlighting.
   SearchHighlighting-remap):
  <!-- -->
 
-    nmap <silent> * <Plug>SearchHighlightingStar:%s///gn<CR>
+    nmap <silent> * <Plug>SearchHighlightingStarm`:%s///gn<CR>g``
 
   The SearchPosition.vim plugin ([vimscript #2634](http://www.vim.org/scripts/script.php?script_id=2634)) provides an extended
   version of that command.
@@ -354,7 +354,7 @@ __You need to separately
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2022 Ingo Karkat -
+Copyright: (C) 2008-2023 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
