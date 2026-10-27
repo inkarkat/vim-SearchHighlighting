@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingo-library.vim plugin
 "
-" Copyright: (C) 2009-2019 Ingo Karkat
+" Copyright: (C) 2009-2026 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -275,7 +275,7 @@ function! SearchHighlighting#SearchHighlightingNoJump( starCommand, count, text 
 	endif
     else
 	if a:count
-	    if a:starCommand =~# 'W$'
+	    if a:starCommand =~# 'W$' || a:text !=# expand('<cword>')
 		return s:VisualCountStar(a:count, l:searchPattern)
 	    else
 		return s:DefaultCountStar(a:count . a:starCommand)

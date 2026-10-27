@@ -261,6 +261,11 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
+##### 2.12    RELEASEME
+- Robustness: SearchHighlighting#SearchHighlightingNoJump() uses
+  s:VisualCountStar() instead of s:DefaultCountStar() if called with a search
+  a:text that does not correspond to &lt;cword&gt;.
+
 ##### 2.11    14-Mar-2023
 - Minor: Also trigger LastSearchPatternChanged during auto-search whenever the
   search pattern changes.
@@ -354,7 +359,7 @@ __You need to separately
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2008-2023 Ingo Karkat -
+Copyright: (C) 2008-2026 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
